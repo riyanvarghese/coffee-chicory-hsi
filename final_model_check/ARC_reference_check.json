@@ -1,0 +1,19 @@
+{
+ "family": "ARC",
+ "ref": [
+  "chemistry bands: absorbance + SG1",
+  "PLSR"
+ ],
+ "this_run": [
+  1.04,
+  0.9,
+  0.88
+ ],
+ "published": [
+  1.04,
+  0.9,
+  0.88
+ ],
+ "match": true,
+ "minutes": 12.69903939962387
+}

@@ -1,0 +1,31 @@
+4940 patches | 33 dishes | sessions [np.int64(1), np.int64(2), np.int64(3)]
+                   robusta  dishes
+session label                     
+1       AR[50:50]     50.0       3
+        AR[60:40]     40.0       3
+        AR[70:30]     30.0       3
+2       AR100          0.0       3
+        AR[80:20]     20.0       3
+        AR[90:10]     10.0       3
+3       AR[55:45]     45.0       3
+        AR[65:35]     35.0       3
+        AR[75:25]     25.0       3
+        AR[85:15]     15.0       3
+        AR[95:5]       5.0       3
+ARC: 4940 patches, 33 dishes, sessions [1, 2, 3], 266 bands
+  chemistry bands: absorbance + SG1        done  (0.2 min)
+    current model, per held-out session: [1.04, 0.9, 0.88]
+  absorbance + offset                      done  (1.2 min)
+  absorbance + offset + EMSC               done  (3.2 min)
+  absorbance                               done  (3.9 min)
+  raw reflectance                          done  (4.8 min)
+  SNV                                      done  (5.7 min)
+  MSC                                      done  (6.8 min)
+  absorbance + SNV + SG1                   done  (7.8 min)
+  absorbance + SG1                         done  (8.7 min)
+  SG1                                      done  (9.7 min)
+  SG2                                      done  (11.7 min)
+  chemistry bands: absorbance + offset     done  (12.0 min)
+  chemistry bands: absorbance + SG2        done  (12.4 min)
+  chemistry bands: EMSC                    done  (12.7 min)
+reference check ('chemistry bands: absorbance + SG1', 'PLSR'): this run [1.04, 0.9, 0.88] | published [1.04, 0.9, 0.88] | MATCH

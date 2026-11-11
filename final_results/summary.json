@@ -1,0 +1,120 @@
+{
+  "existing_model": {
+    "levels": 6,
+    "plates": 18,
+    "n_latent": 5,
+    "unit_rmsecv": 2.54,
+    "plate_rmsecv": 1.21,
+    "r2": 0.9775
+  },
+  "external_validation": {
+    "n_samples": 5,
+    "range_pct": [
+      5.0,
+      45.0
+    ],
+    "rmsep": 1.16,
+    "rmsep_corrected": 0.74,
+    "r2": 0.9932,
+    "slope": 0.934,
+    "intercept": 1.62,
+    "bias": -0.03,
+    "rpd": 13.58,
+    "rer": 34.36,
+    "per_sample": {
+      "RB[95:5]": {
+        "true_chicory": 5.0,
+        "pred_chicory": 5.36,
+        "true_robusta": 95.0,
+        "pred_robusta": 94.64,
+        "error": 0.36
+      },
+      "RB[85:15]": {
+        "true_chicory": 15.0,
+        "pred_chicory": 16.33,
+        "true_robusta": 85.0,
+        "pred_robusta": 83.67,
+        "error": 1.33
+      },
+      "RB[75:25]": {
+        "true_chicory": 25.0,
+        "pred_chicory": 25.69,
+        "true_robusta": 75.0,
+        "pred_robusta": 74.31,
+        "error": 0.69
+      },
+      "RB[65:35]": {
+        "true_chicory": 35.0,
+        "pred_chicory": 34.48,
+        "true_robusta": 65.0,
+        "pred_robusta": 65.52,
+        "error": -0.52
+      },
+      "RB[55:45]": {
+        "true_chicory": 45.0,
+        "pred_chicory": 42.96,
+        "true_robusta": 55.0,
+        "pred_robusta": 57.04,
+        "error": -2.04
+      }
+    }
+  },
+  "recalibrated_model": {
+    "levels": 11,
+    "plates": 33,
+    "n_latent": 6,
+    "unit_rmsecv": 1.71,
+    "plate_rmsecv": 0.71,
+    "r2": 0.9882
+  },
+  "unknowns": {
+    "A": {
+      "chicory": 31.2,
+      "robusta": 68.8,
+      "uncertainty": 6.0,
+      "config_sd": 5.8,
+      "Q_rel": 1.65,
+      "verdict": "quantifiable"
+    },
+    "B": {
+      "chicory": 50.9,
+      "robusta": null,
+      "uncertainty": 12.0,
+      "config_sd": 11.9,
+      "Q_rel": 4.35,
+      "verdict": "outside calibrated space \u2014 detect only"
+    },
+    "C": {
+      "chicory": 38.5,
+      "robusta": null,
+      "uncertainty": 12.3,
+      "config_sd": 12.2,
+      "Q_rel": 4.25,
+      "verdict": "outside calibrated space \u2014 detect only"
+    },
+    "RB100": {
+      "chicory": 0.1,
+      "robusta": 99.9,
+      "uncertainty": 1.7,
+      "config_sd": 0.0,
+      "Q_rel": 1.0,
+      "verdict": "quantifiable"
+    },
+    "CH100": {
+      "chicory": 88.0,
+      "robusta": null,
+      "uncertainty": 1.7,
+      "config_sd": 0.0,
+      "Q_rel": 3.77,
+      "verdict": "outside calibrated space \u2014 detect only"
+    }
+  },
+  "validity_range_chicory": [
+    0,
+    50
+  ],
+  "validity_range_robusta": [
+    50,
+    100
+  ]
+}

@@ -1,0 +1,104 @@
+{
+ "RBCH": {
+  "mixture": "Robusta + chicory",
+  "current": "absorbance + offset + PLSR",
+  "current_mean": 0.787,
+  "current_rank": 9,
+  "combinations": 70,
+  "lowest": "chemistry bands: EMSC + SVR (linear)",
+  "lowest_mean": 0.714,
+  "lowest_verdict": "tie",
+  "lowest_ci": "-0.23 to +0.12",
+  "n_better": 0,
+  "n_tie": 33,
+  "n_worse": 36,
+  "better": [],
+  "reference_check": {
+   "family": "RBCH",
+   "ref": [
+    "absorbance + offset",
+    "PLSR"
+   ],
+   "this_run": [
+    0.61,
+    0.64,
+    1.11
+   ],
+   "published": [
+    0.61,
+    0.64,
+    1.11
+   ],
+   "match": true,
+   "minutes": 13.148908897240956
+  }
+ },
+ "ABCH": {
+  "mixture": "Arabica + chicory",
+  "current": "absorbance + offset + EMSC + PLSR",
+  "current_mean": 0.778,
+  "current_rank": 2,
+  "combinations": 70,
+  "lowest": "absorbance + offset + EMSC + PCR",
+  "lowest_mean": 0.747,
+  "lowest_verdict": "tie",
+  "lowest_ci": "-0.15 to +0.08",
+  "n_better": 0,
+  "n_tie": 12,
+  "n_worse": 57,
+  "better": [],
+  "reference_check": {
+   "family": "ABCH",
+   "ref": [
+    "absorbance + offset + EMSC",
+    "PLSR"
+   ],
+   "this_run": [
+    0.38,
+    1.28,
+    0.68
+   ],
+   "published": [
+    0.38,
+    1.28,
+    0.68
+   ],
+   "match": true,
+   "minutes": 15.291349073251089
+  }
+ },
+ "ARC": {
+  "mixture": "Arabica + robusta + chicory",
+  "current": "chemistry bands: absorbance + SG1 + PLSR",
+  "current_mean": 0.937,
+  "current_rank": 1,
+  "combinations": 70,
+  "lowest": "chemistry bands: absorbance + SG1 + PLSR",
+  "lowest_mean": 0.937,
+  "lowest_verdict": "current model",
+  "lowest_ci": "",
+  "n_better": 0,
+  "n_tie": 9,
+  "n_worse": 60,
+  "better": [],
+  "reference_check": {
+   "family": "ARC",
+   "ref": [
+    "chemistry bands: absorbance + SG1",
+    "PLSR"
+   ],
+   "this_run": [
+    1.04,
+    0.9,
+    0.88
+   ],
+   "published": [
+    1.04,
+    0.9,
+    0.88
+   ],
+   "match": true,
+   "minutes": 12.69903939962387
+  }
+ }
+}

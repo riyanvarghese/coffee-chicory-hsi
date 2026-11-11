@@ -1,0 +1,42 @@
+4940 patches | 33 dishes | sessions [np.int64(1), np.int64(2), np.int64(3)]
+                   robusta  dishes
+session label                     
+1       AR[50:50]     50.0       3
+        AR[60:40]     40.0       3
+        AR[70:30]     30.0       3
+2       AR100          0.0       3
+        AR[80:20]     20.0       3
+        AR[90:10]     10.0       3
+3       AR[55:45]     45.0       3
+        AR[65:35]     35.0       3
+        AR[75:25]     25.0       3
+        AR[85:15]     15.0       3
+        AR[95:5]       5.0       3
+plate RMSEP on the held-out scan set (% robusta):
+held_out                            S1 held out  S2 held out  S3 held out  mean       bias S1 / S2
+model                                                                                             
+chemistry bands, derivative + PLSR         1.04         0.90         0.88  0.94  -0.3 / -0.3 / 0.4
+ElasticNet                                 1.34         0.82         1.56  1.24   -1.1 / 0.5 / 1.2
+first derivative + PLSR                    1.26         1.65         1.00  1.30  -0.9 / 1.4 / -0.4
+Ridge                                      1.40         1.05         1.48  1.31  -1.1 / -0.5 / 1.1
+PCR                                        1.30         0.92         2.07  1.43   -1.1 / 0.4 / 1.7
+SVR (linear)                               1.62         1.09         1.85  1.52   -1.4 / 0.1 / 1.5
+PLSR                                       1.47         2.00         1.64  1.71  -1.3 / -1.4 / 1.1
+EMSC + PLSR                                1.21         2.21         3.72  2.38  -0.5 / -2.0 / 2.8
+Random Forest                              4.40         4.45         3.03  3.96   -1.5 / 4.4 / 1.1
+Gradient Boosting                          5.43         6.16         3.12  4.90   -3.1 / 6.1 / 1.2
+SVR (RBF)                                  7.74        14.33         2.98  8.35  -5.6 / 12.4 / 1.0
+
+lowest: chemistry bands, derivative + PLSR. Predicted vs labelled robusta % (held-out dishes, mean per dish type):
+fold  label      y   
+1     AR[50:50]  50.0    49.4
+      AR[60:40]  40.0    39.2
+      AR[70:30]  30.0    30.6
+2     AR100      0.0      0.1
+      AR[80:20]  20.0    20.3
+      AR[90:10]  10.0     8.6
+3     AR[55:45]  45.0    45.7
+      AR[65:35]  35.0    35.3
+      AR[75:25]  25.0    25.7
+      AR[85:15]  15.0    14.9
+      AR[95:5]   5.0      5.4

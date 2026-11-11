@@ -1,0 +1,6 @@
+study,range_pct,levels,LV,error,spatial
+"Harohally 2021 — robusta+chicory, FT-NIR",0–100,~40,5,1.29,no
+"Harohally 2021 — arabica+chicory, FT-NIR",0–100,~40,3,0.9,no
+Forchetti 2020 — NIR-HSI + MCR,1–40,5,2,4.0,4 mm²
+"Coqueiro 2024 — NIR, coffee husk",0–50,6,20,3.94,no
+THIS WORK — SWIR-HSI (external),0–50,11,6,1.1642210659703047,full dish

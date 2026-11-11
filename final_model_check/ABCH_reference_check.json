@@ -1,0 +1,19 @@
+{
+ "family": "ABCH",
+ "ref": [
+  "absorbance + offset + EMSC",
+  "PLSR"
+ ],
+ "this_run": [
+  0.38,
+  1.28,
+  0.68
+ ],
+ "published": [
+  0.38,
+  1.28,
+  0.68
+ ],
+ "match": true,
+ "minutes": 15.291349073251089
+}

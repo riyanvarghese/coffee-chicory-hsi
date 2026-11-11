@@ -1,0 +1,151 @@
+{
+  "data": {
+    "levels_pct": [
+      0,
+      5,
+      10,
+      15,
+      20,
+      25,
+      30,
+      35,
+      40,
+      45,
+      50
+    ],
+    "plates": 33,
+    "patches": 4950,
+    "sessions": [
+      1,
+      2,
+      3
+    ]
+  },
+  "training_method": "pooled calibration; nested leave-one-session-out; inner leave-one-concentration-out with the one-standard-error rule; trimming refitted inside each fold",
+  "selected": {
+    "method": "SVR (linear)",
+    "param_name": "C",
+    "final_param": 0.1,
+    "params_in_folds": {
+      "1": 1.0,
+      "2": 0.1,
+      "3": 0.1
+    }
+  },
+  "loso": {
+    "per_held_out_session": {
+      "1": {
+        "rmsep_plate": 0.3713,
+        "rmsep_sample": 0.051,
+        "bias": -0.051,
+        "r2": null,
+        "slope": null,
+        "intercept": null
+      },
+      "2": {
+        "rmsep_plate": 1.2885,
+        "rmsep_sample": 1.2182,
+        "bias": 0.7527,
+        "r2": 0.9917,
+        "slope": 0.9749,
+        "intercept": 1.5046
+      },
+      "3": {
+        "rmsep_plate": 1.1247,
+        "rmsep_sample": 1.0521,
+        "bias": -0.5138,
+        "r2": 0.9937,
+        "slope": 0.9426,
+        "intercept": 0.9212
+      }
+    },
+    "mean_rmsep": 0.9282,
+    "sd_rmsep": 0.4892,
+    "pooled_rmsep": 1.1585,
+    "pooled_r2": 0.9946,
+    "rpd": 13.86
+  },
+  "runner_up": {
+    "method": "ElasticNet",
+    "mean_rmsep": 1.2276,
+    "difference_ci95": [
+      -0.4149,
+      -0.1655
+    ],
+    "tie": false
+  },
+  "all_methods": [
+    {
+      "model": "SVR (linear)",
+      "mean_rmsep": 0.9282,
+      "sd_rmsep": 0.4892,
+      "worst_rmsep": 1.2885,
+      "max_abs_bias": 0.7527,
+      "pooled_rmsep": 1.1585,
+      "pooled_r2": 0.9946
+    },
+    {
+      "model": "ElasticNet",
+      "mean_rmsep": 1.2276,
+      "sd_rmsep": 0.331,
+      "worst_rmsep": 1.583,
+      "max_abs_bias": 1.5622,
+      "pooled_rmsep": 1.115,
+      "pooled_r2": 0.995
+    },
+    {
+      "model": "Ridge",
+      "mean_rmsep": 1.5526,
+      "sd_rmsep": 0.4018,
+      "worst_rmsep": 2.0162,
+      "max_abs_bias": 2.0091,
+      "pooled_rmsep": 1.3985,
+      "pooled_r2": 0.9922
+    },
+    {
+      "model": "PLSR",
+      "mean_rmsep": 2.6081,
+      "sd_rmsep": 1.5408,
+      "worst_rmsep": 4.3825,
+      "max_abs_bias": 4.3821,
+      "pooled_rmsep": 2.1093,
+      "pooled_r2": 0.9822
+    },
+    {
+      "model": "PCR",
+      "mean_rmsep": 4.146,
+      "sd_rmsep": 4.8207,
+      "worst_rmsep": 9.7122,
+      "max_abs_bias": 9.7054,
+      "pooled_rmsep": 3.2041,
+      "pooled_r2": 0.9589
+    },
+    {
+      "model": "Random Forest",
+      "mean_rmsep": 4.5928,
+      "sd_rmsep": 0.9952,
+      "worst_rmsep": 5.4237,
+      "max_abs_bias": 5.4237,
+      "pooled_rmsep": 4.3552,
+      "pooled_r2": 0.9241
+    },
+    {
+      "model": "Gradient Boosting",
+      "mean_rmsep": 5.2322,
+      "sd_rmsep": 0.3558,
+      "worst_rmsep": 5.5236,
+      "max_abs_bias": 5.5235,
+      "pooled_rmsep": 5.1334,
+      "pooled_r2": 0.8946
+    },
+    {
+      "model": "SVR (RBF)",
+      "mean_rmsep": 8.4181,
+      "sd_rmsep": 8.2814,
+      "worst_rmsep": 17.5107,
+      "max_abs_bias": 17.4965,
+      "pooled_rmsep": 6.8905,
+      "pooled_r2": 0.8101
+    }
+  ]
+}

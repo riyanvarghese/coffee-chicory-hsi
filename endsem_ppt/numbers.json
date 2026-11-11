@@ -1,0 +1,392 @@
+{
+ "ABCH": {
+  "err": {
+   "1": 0.38,
+   "2": 1.28,
+   "3": 0.68
+  },
+  "mean": 0.78,
+  "sd": 0.46,
+  "pooled": 0.98,
+  "r2": 0.996,
+  "rpd": 16.3,
+  "bias": {
+   "1": 0.23,
+   "2": 0.39,
+   "3": -0.17
+  },
+  "max_bias": 0.39
+ },
+ "ARC": {
+  "err": {
+   "1": 1.04,
+   "2": 0.9,
+   "3": 0.88
+  },
+  "mean": 0.94,
+  "sd": 0.09,
+  "pooled": 0.93,
+  "r2": 0.997,
+  "rpd": 17.3,
+  "bias": {
+   "1": -0.27,
+   "2": -0.33,
+   "3": 0.4
+  },
+  "max_bias": 0.4
+ },
+ "ABCH_blind": {
+  "rows": [
+   {
+    "label": "AB100",
+    "session": 1,
+    "y": 0.0,
+    "p": 0.23,
+    "e": 0.23
+   },
+   {
+    "label": "AB[95:5]",
+    "session": 3,
+    "y": 5.0,
+    "p": 5.84,
+    "e": 0.84
+   },
+   {
+    "label": "AB[90:10]",
+    "session": 2,
+    "y": 10.0,
+    "p": 9.24,
+    "e": -0.76
+   },
+   {
+    "label": "AB[85:15]",
+    "session": 3,
+    "y": 15.0,
+    "p": 14.82,
+    "e": -0.18
+   },
+   {
+    "label": "AB[80:20]",
+    "session": 2,
+    "y": 20.0,
+    "p": 21.88,
+    "e": 1.88
+   },
+   {
+    "label": "AB[75:25]",
+    "session": 3,
+    "y": 25.0,
+    "p": 24.54,
+    "e": -0.46
+   },
+   {
+    "label": "AB[70:30]",
+    "session": 2,
+    "y": 30.0,
+    "p": 30.49,
+    "e": 0.49
+   },
+   {
+    "label": "AB[65:35]",
+    "session": 3,
+    "y": 35.0,
+    "p": 34.85,
+    "e": -0.15
+   },
+   {
+    "label": "AB[60:40]",
+    "session": 2,
+    "y": 40.0,
+    "p": 40.89,
+    "e": 0.89
+   },
+   {
+    "label": "AB[55:45]",
+    "session": 3,
+    "y": 45.0,
+    "p": 44.11,
+    "e": -0.89
+   },
+   {
+    "label": "AB[50:50]",
+    "session": 2,
+    "y": 50.0,
+    "p": 49.46,
+    "e": -0.54
+   }
+  ],
+  "worst": {
+   "label": "AB[80:20]",
+   "e": 1.88
+  },
+  "max_abs": 1.88,
+  "slopes": {
+   "2": 0.994,
+   "3": 0.966
+  }
+ },
+ "ARC_blind": {
+  "rows": [
+   {
+    "label": "AR100",
+    "session": 2,
+    "y": 0.0,
+    "p": 0.06,
+    "e": 0.06
+   },
+   {
+    "label": "AR[95:5]",
+    "session": 3,
+    "y": 5.0,
+    "p": 5.43,
+    "e": 0.43
+   },
+   {
+    "label": "AR[90:10]",
+    "session": 2,
+    "y": 10.0,
+    "p": 8.6,
+    "e": -1.4
+   },
+   {
+    "label": "AR[85:15]",
+    "session": 3,
+    "y": 15.0,
+    "p": 14.92,
+    "e": -0.08
+   },
+   {
+    "label": "AR[80:20]",
+    "session": 2,
+    "y": 20.0,
+    "p": 20.34,
+    "e": 0.34
+   },
+   {
+    "label": "AR[75:25]",
+    "session": 3,
+    "y": 25.0,
+    "p": 25.72,
+    "e": 0.72
+   },
+   {
+    "label": "AR[70:30]",
+    "session": 1,
+    "y": 30.0,
+    "p": 30.55,
+    "e": 0.55
+   },
+   {
+    "label": "AR[65:35]",
+    "session": 3,
+    "y": 35.0,
+    "p": 35.29,
+    "e": 0.29
+   },
+   {
+    "label": "AR[60:40]",
+    "session": 1,
+    "y": 40.0,
+    "p": 39.2,
+    "e": -0.8
+   },
+   {
+    "label": "AR[55:45]",
+    "session": 3,
+    "y": 45.0,
+    "p": 45.66,
+    "e": 0.66
+   },
+   {
+    "label": "AR[50:50]",
+    "session": 1,
+    "y": 50.0,
+    "p": 49.45,
+    "e": -0.55
+   }
+  ],
+  "worst": {
+   "label": "AR[90:10]",
+   "e": -1.4
+  },
+  "max_abs": 1.4,
+  "slopes": {
+   "1": 0.945,
+   "2": 1.014,
+   "3": 1.008
+  }
+ },
+ "final_check": {
+  "RBCH": {
+   "current_mean": 0.787,
+   "current_rank": 9,
+   "lowest": "chemistry bands: EMSC + SVR (linear)",
+   "lowest_mean": 0.714,
+   "n_better": 0,
+   "n_tie": 33,
+   "n_worse": 36
+  },
+  "ABCH": {
+   "current_mean": 0.778,
+   "current_rank": 2,
+   "lowest": "absorbance + offset + EMSC + PCR",
+   "lowest_mean": 0.747,
+   "n_better": 0,
+   "n_tie": 12,
+   "n_worse": 57
+  },
+  "ARC": {
+   "current_mean": 0.937,
+   "current_rank": 1,
+   "lowest": "chemistry bands: absorbance + SG1 + PLSR",
+   "lowest_mean": 0.937,
+   "n_better": 0,
+   "n_tie": 9,
+   "n_worse": 60
+  }
+ },
+ "linear_vs_nonlinear": {
+  "Robusta + chicory": {
+   "best_linear": 0.79,
+   "Random Forest": 3.76,
+   "Gradient Boosting": 4.12,
+   "SVR (RBF)": 8.09
+  },
+  "Arabica + chicory": {
+   "best_linear": 0.78,
+   "Random Forest": 4.59,
+   "Gradient Boosting": 5.23,
+   "SVR (RBF)": 8.42
+  },
+  "Arabica + robusta + chicory": {
+   "best_linear": 0.94,
+   "Random Forest": 3.96,
+   "Gradient Boosting": 4.9,
+   "SVR (RBF)": 8.35
+  }
+ },
+ "ab_cmp": {
+  "EMSC + PLSR": [
+   0.38,
+   1.28,
+   0.68,
+   0.78
+  ],
+  "SVR (linear)": [
+   0.37,
+   1.29,
+   1.12,
+   0.93
+  ],
+  "ElasticNet": [
+   1.58,
+   1.17,
+   0.93,
+   1.23
+  ],
+  "Ridge": [
+   2.02,
+   1.34,
+   1.3,
+   1.55
+  ],
+  "PLSR": [
+   4.38,
+   1.61,
+   1.83,
+   2.61
+  ],
+  "PCR": [
+   9.71,
+   1.31,
+   1.41,
+   4.15
+  ],
+  "Random Forest": [
+   5.42,
+   4.86,
+   3.49,
+   4.59
+  ],
+  "Gradient Boosting": [
+   5.52,
+   4.84,
+   5.34,
+   5.23
+  ],
+  "SVR (RBF)": [
+   17.51,
+   6.44,
+   1.31,
+   8.42
+  ]
+ },
+ "arc_cmp": {
+  "chemistry bands, derivative + PLSR": [
+   1.04,
+   0.9,
+   0.88,
+   0.94
+  ],
+  "ElasticNet": [
+   1.34,
+   0.82,
+   1.56,
+   1.24
+  ],
+  "first derivative + PLSR": [
+   1.26,
+   1.65,
+   1.0,
+   1.3
+  ],
+  "Ridge": [
+   1.4,
+   1.05,
+   1.48,
+   1.31
+  ],
+  "PCR": [
+   1.3,
+   0.92,
+   2.07,
+   1.43
+  ],
+  "SVR (linear)": [
+   1.62,
+   1.09,
+   1.85,
+   1.52
+  ],
+  "PLSR": [
+   1.47,
+   2.0,
+   1.64,
+   1.71
+  ],
+  "EMSC + PLSR": [
+   1.21,
+   2.21,
+   3.72,
+   2.38
+  ],
+  "Random Forest": [
+   4.4,
+   4.45,
+   3.03,
+   3.96
+  ],
+  "Gradient Boosting": [
+   5.43,
+   6.16,
+   3.12,
+   4.9
+  ],
+  "SVR (RBF)": [
+   7.74,
+   14.33,
+   2.98,
+   8.35
+  ]
+ }
+}

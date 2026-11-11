@@ -1,0 +1,19 @@
+{
+ "family": "RBCH",
+ "ref": [
+  "absorbance + offset",
+  "PLSR"
+ ],
+ "this_run": [
+  0.61,
+  0.64,
+  1.11
+ ],
+ "published": [
+  0.61,
+  0.64,
+  1.11
+ ],
+ "match": true,
+ "minutes": 13.148908897240956
+}

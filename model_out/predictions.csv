@@ -1,0 +1,7 @@
+sample,n_patches,chicory_pct,uncertainty,stir_sd,session_u,Q_rel,robusta_pct,verdict
+A,401,35.8,7.5,1.58,5.1,1.45,64.2,inside the calibration range
+B,450,63.0,10.2,1.34,8.7,3.05,,"outside calibrated space AND above the 0-50% range -- treat as 'high chicory', not a number"
+C,436,55.8,10.0,0.89,8.5,3.06,,"outside calibrated space AND above the 0-50% range -- treat as 'high chicory', not a number"
+RB100,410,1.1,5.4,1.52,0.0,1.0,98.9,inside the calibration range
+CH100,436,84.7,5.5,1.85,0.0,2.96,,"outside calibrated space AND above the 0-50% range -- treat as 'high chicory', not a number"
+AB100,450,-8.0,5.2,0.34,0.0,1.09,108.0,extrapolation beyond 50%

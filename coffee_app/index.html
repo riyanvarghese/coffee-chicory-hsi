@@ -1,0 +1,1539 @@
+<title>Coffee Adulterant Detector</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&display=swap">
+<style>
+/* Layout: Fabric-style grid. A wireframe coffee bean over a giant wordmark (home); three tilting "covers" (learn);
+   one article per page; the scan workbench. One family (Archivo): wide for display, normal for reading.
+   Palette: cool paper fading to infrared violet, black ink, roast orange as the only accent. */
+:root {
+  --bg: #f6f1ea; --surface: #fffdfa; --tint: #faf6f0; --tint-2: #efe6da; --ink: #1e1410; --muted: #74665b; --line: #e4d9cc; --track: #ece3d7;
+  --accent: #d2501a; --glow: #ecd9c4;
+  --coffee: #3b2418; --coffee-2: #a8441a; --crema: #e3a172; --on-coffee: #ffffff;
+  --metal: #ddd9d4; --metal-2: #a39c95; --wood: #9a6640; --wood-2: #6b4423; --glass: #eef3f6;
+  --ok: #2f6b45; --ok-bg: #e5f0e8; --warn: #8a5a00; --warn-bg: #f8edd6; --bad: #a3321f; --bad-bg: #f8e1dc;
+  --s-robusta: #a84a12; --s-arabica: #0079a8; --s-chicory: #b98318;
+  --shadow: 0 24px 50px -24px rgb(17 17 20 / .35);
+  --display: "Archivo", "Helvetica Neue", Arial, sans-serif; --body: "Archivo", "Helvetica Neue", Arial, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #120d0a; --surface: #1b1410; --tint: #16100d; --tint-2: #241a14; --ink: #f4ece3; --muted: #ab9b8e; --line: #30251e; --track: #281e18;
+  --accent: #ff7a3d; --glow: #2e1b10;
+  --coffee: #f0dcc8; --coffee-2: #ff9a66; --crema: #c8693d; --on-coffee: #120d0a;
+  --metal: #8d847c; --metal-2: #6c645d; --wood: #8a5a36; --wood-2: #5e3c22; --glass: #2b3940;
+  --ok: #7cc296; --ok-bg: #1d2e23; --warn: #e3b45c; --warn-bg: #3a2c15; --bad: #f08a76; --bad-bg: #3d1d17;
+  --s-robusta: #cf733b; --s-arabica: #2a9bc4; --s-chicory: #b98a24; --shadow: 0 24px 50px -24px rgb(0 0 0 / .7); color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #120d0a; --surface: #1b1410; --tint: #16100d; --tint-2: #241a14; --ink: #f4ece3; --muted: #ab9b8e; --line: #30251e; --track: #281e18;
+  --accent: #ff7a3d; --glow: #2e1b10;
+  --coffee: #f0dcc8; --coffee-2: #ff9a66; --crema: #c8693d; --on-coffee: #120d0a;
+  --metal: #8d847c; --metal-2: #6c645d; --wood: #8a5a36; --wood-2: #5e3c22; --glass: #2b3940;
+  --ok: #7cc296; --ok-bg: #1d2e23; --warn: #e3b45c; --warn-bg: #3a2c15; --bad: #f08a76; --bad-bg: #3d1d17;
+  --s-robusta: #cf733b; --s-arabica: #2a9bc4; --s-chicory: #b98a24; --shadow: 0 24px 50px -24px rgb(0 0 0 / .7); color-scheme: dark; }
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 16.5px; line-height: 1.6; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 30; background: var(--bg); }
+.wrap { max-width: 1240px; margin: 0 auto; padding-left: max(20px, env(safe-area-inset-left, 0px)); padding-right: max(20px, env(safe-area-inset-right, 0px)); }
+h1, h2, h3 { font-family: var(--display); color: var(--ink); text-wrap: balance; margin: 0; font-weight: 650; letter-spacing: -0.01em; }
+h2 { font-size: clamp(1.4rem, 2.4vw, 1.9rem); line-height: 1.15; }
+h3 { font-size: 1.15rem; line-height: 1.3; }
+p { margin: 0; }
+a { color: var(--coffee-2); }
+.muted { color: var(--muted); }
+.num { font-variant-numeric: tabular-nums; }
+.measure { max-width: 66ch; }
+.eyebrow { font-size: .85rem; color: var(--muted); font-weight: 600; }
+.chev { width: 22px; height: 22px; flex: none; transition: transform .25s cubic-bezier(.2,.8,.2,1); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.btn { font: inherit; font-weight: 600; border-radius: 999px; padding: 11px 20px; border: 1px solid var(--ink); background: var(--ink); color: var(--bg);
+        cursor: pointer; text-decoration: none; display: inline-flex; gap: 10px; align-items: center; transition: transform .2s, box-shadow .2s; }
+.btn:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+.btn:active { transform: scale(.97); }
+.btn.ghost { background: transparent; color: var(--ink); }
+.view[hidden] { display: none !important; }
+.view { animation: viewIn .6s cubic-bezier(.2,.7,.2,1) both; }
+@keyframes viewIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+#readbar { position: fixed; top: env(safe-area-inset-top, 0px); left: 0; height: 3px; width: 0; background: var(--accent); z-index: 40; transition: width .08s linear; }
+
+/* top bar */
+.topbar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: color-mix(in srgb, var(--bg) 88%, transparent);
+           backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
+.tb { display: grid; grid-template-columns: auto 1fr auto; align-items: stretch; min-height: 62px;
+       padding-left: max(20px, env(safe-area-inset-left, 0px)); padding-right: max(20px, env(safe-area-inset-right, 0px)); }
+.brand { display: flex; align-items: center; gap: 10px; color: var(--ink); text-decoration: none; font-family: var(--display);
+          font-stretch: 125%; font-weight: 800; font-size: 1.02rem; letter-spacing: -0.01em; padding-right: 20px; }
+.brand svg { width: 28px; height: 28px; color: var(--ink); transition: transform .5s cubic-bezier(.3,1.5,.5,1); }
+.brand:hover svg { transform: rotate(-30deg) scale(1.1); }
+.nav { display: flex; justify-content: center; align-items: stretch; }
+.nav a { display: flex; align-items: center; padding: 0 22px; color: var(--ink); text-decoration: none; font-size: 1.05rem; border-left: 1px solid var(--line);
+          position: relative; transition: background .2s; }
+.nav a:last-child { border-right: 1px solid var(--line); }
+.nav a::after { content: ""; position: absolute; left: 22px; right: 22px; bottom: 14px; height: 1.5px; background: var(--accent); transform: scaleX(0);
+                 transform-origin: left; transition: transform .3s cubic-bezier(.2,.8,.2,1); }
+.nav a:hover::after, .nav a[aria-current="page"]::after { transform: scaleX(1); }
+.cta { align-self: center; display: inline-flex; gap: 10px; align-items: center; padding: 9px 14px 9px 16px; border: 1px solid var(--line); background: var(--surface);
+         color: var(--ink); text-decoration: none; font-weight: 600; border-radius: 4px; transition: border-color .2s, transform .2s; }
+.cta:hover { border-color: var(--ink); transform: translateY(-1px); }
+.cta svg { width: 20px; height: 20px; transition: transform .5s cubic-bezier(.3,1.5,.5,1); }
+.cta:hover svg { transform: rotate(90deg); }
+.menu-btn { display: none; font: inherit; font-weight: 600; background: none; border: 1px solid var(--line); color: var(--ink); border-radius: 4px; padding: 6px 12px; align-self: center; cursor: pointer; }
+
+/* home */
+.hero { position: relative; min-height: calc(100vh - 63px); min-height: calc(100dvh - 63px); overflow: hidden; display: grid;
+         grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: 1fr auto auto;
+         }
+.gridlines { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(3, 1fr); pointer-events: none; }
+.gridlines i { border-left: 1px solid var(--line); }
+.gridlines i:first-child { border-left: 0; }
+.bean-wrap { grid-column: 1; grid-row: 1 / 3; position: relative; z-index: 3; min-height: 0; margin-right: -2.5vw; pointer-events: none; }
+#beanCanvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.hero-copy { grid-column: 2 / 4; grid-row: 1; align-self: end; padding: 0 3vw 34px; z-index: 4; display: grid; gap: 18px; }
+.hero-title { font-stretch: 125%; font-weight: 700; text-transform: uppercase; font-size: clamp(2rem, 3.8vw, 3.6rem); line-height: 1.02; letter-spacing: .005em; }
+.hero-sub { max-width: 48ch; color: var(--muted); font-size: 1.08rem; }
+.hero-stats { display: grid; grid-template-columns: repeat(3, minmax(0, max-content)); gap: 0; margin: 4px 0 0; }
+.hero-stats div { padding: 2px 26px 2px 14px; border-left: 1px solid var(--line); }
+.hero-stats div:first-child { padding-left: 0; border-left: 0; }
+.hero-stats dt { font-size: .8rem; color: var(--muted); }
+.hero-stats dd { margin: 0; font-stretch: 112%; font-weight: 700; font-size: 1.15rem; }
+.hero-links { grid-column: 2 / 4; grid-row: 2; display: grid; grid-template-columns: 1fr 1fr; gap: 18px; padding: 0 3vw 24px; z-index: 4; }
+.rowlink { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 14px 14px 14px 22px; border-radius: 4px;
+            border: 1px solid color-mix(in srgb, var(--ink) 28%, transparent); background: color-mix(in srgb, var(--surface) 78%, transparent);
+            backdrop-filter: blur(6px); color: var(--ink); text-decoration: none; cursor: pointer;
+            box-shadow: 0 1px 0 color-mix(in srgb, var(--ink) 10%, transparent), 0 10px 24px -18px rgb(30 20 16 / .45);
+            transition: background .25s, color .25s, border-color .25s, transform .25s cubic-bezier(.2,.8,.2,1), box-shadow .25s; }
+.rl-text { display: grid; gap: 3px; min-width: 0; }
+.rl-text small { font-stretch: 125%; font-weight: 700; font-size: .7rem; letter-spacing: .09em; text-transform: uppercase; opacity: .62; }
+.rl-text b { font-weight: 600; font-size: clamp(1.05rem, 1.45vw, 1.28rem); line-height: 1.2; }
+.rl-go { flex: none; width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; background: var(--ink); color: var(--bg);
+          transition: background .25s, color .25s, transform .35s cubic-bezier(.3,1.5,.5,1); }
+.rowlink.primary { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.rowlink.primary .rl-go { background: var(--accent); color: #fff; }
+.rowlink:hover { transform: translateY(-3px); border-color: var(--ink); box-shadow: var(--shadow); background: var(--ink); color: var(--bg); }
+.rowlink:hover .rl-go { background: var(--accent); color: #fff; transform: rotate(-45deg); }
+.rowlink.primary:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
+.rowlink.primary:hover .rl-go { background: #fff; color: var(--accent); }
+.rowlink:active { transform: translateY(-1px) scale(.985); }
+.rowlink .rl-go .chev, .rowlink:hover .rl-go .chev { transform: none; }
+.rowlink:hover .chev, .cover:hover .chev, .nextcard:hover .chev { transform: translateX(6px); }
+.wordmark { grid-column: 1 / 4; grid-row: 3; font-family: var(--display); font-stretch: 125%; font-weight: 900; line-height: .76; letter-spacing: -.02em;
+             white-space: nowrap; padding: 0 0 .5vw .5vw; justify-self: start; width: max-content; z-index: 2; color: var(--ink);
+             background: linear-gradient(95deg, color-mix(in srgb, var(--ink) 72%, var(--bg)) 0%, var(--ink) 55%); -webkit-background-clip: text; background-clip: text;
+             -webkit-text-fill-color: transparent; user-select: none; }
+.wordmark sup { font-size: .085em; font-weight: 600; vertical-align: top; position: relative; top: .25em; margin-left: .15em; letter-spacing: 0; -webkit-text-fill-color: var(--ink); }
+
+/* article end */
+.back { display: inline-flex; gap: 8px; align-items: center; color: var(--muted); text-decoration: none; font-weight: 600; width: fit-content; }
+.back:hover { color: var(--ink); }
+.back:hover .chev { transform: translateX(-5px); }
+.nextcard { display: grid; grid-template-columns: 1fr auto; gap: 4px 16px; align-items: center; padding: 26px 28px; border: 1px solid var(--line);
+             background: color-mix(in srgb, var(--surface) 88%, transparent); text-decoration: none; color: var(--ink); transition: border-color .25s, transform .25s, box-shadow .25s; }
+.nextcard b { font-stretch: 125%; text-transform: uppercase; font-size: clamp(1.1rem, 1.8vw, 1.5rem); font-weight: 700; grid-column: 1; }
+.nextcard .chev { grid-column: 2; grid-row: 1 / 3; width: 30px; height: 30px; }
+.nextcard:hover { border-color: var(--ink); transform: translateY(-2px); box-shadow: var(--shadow); }
+
+/* footer */
+.sitefoot { border-top: 1px solid var(--line); padding: 0; margin-top: 0; font-size: inherit; }
+.ft { display: flex; flex-wrap: wrap; gap: 14px 30px; justify-content: space-between; align-items: center; padding-block: 22px 30px; color: var(--muted); font-size: .92rem; }
+.ft nav { display: flex; gap: 20px; }
+.ft a { color: var(--ink); text-decoration: none; }
+.ft a:hover { color: var(--accent); }
+body[data-view="home"] .sitefoot { display: none; }
+
+/* ---------------- learn: blog */
+.article-head { padding-block: 44px 22px; display: grid; gap: 14px; }
+.article-head .lede { font-size: 1.12rem; color: var(--muted); }
+.partnav { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 54px); z-index: 5; background: color-mix(in srgb, var(--bg) 94%, transparent);
+           backdrop-filter: blur(6px); padding-block: 10px; border-bottom: 1px solid var(--line); }
+.partnav .wrap { display: flex; gap: 8px; flex-wrap: wrap; }
+.partnav button { font: inherit; font-size: .92rem; font-weight: 700; border: 1px solid var(--line); background: var(--surface); color: var(--muted);
+                  border-radius: 999px; padding: 5px 14px; cursor: pointer; transition: all .18s; }
+.partnav button:hover { border-color: var(--crema); color: var(--coffee); transform: translateY(-1px); }
+.part { padding-block: 44px; display: grid; gap: 22px; scroll-margin-top: 110px; }
+.part-label { display: flex; gap: 12px; align-items: baseline; }
+.part-label .no { font-family: var(--display); font-size: 2.6rem; color: var(--crema); line-height: 1; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 22px; display: grid; gap: 14px; align-content: start; min-width: 0; }
+.lift { transition: transform .22s ease, box-shadow .22s ease; }
+.lift:hover { transform: translateY(-4px); box-shadow: var(--shadow); }
+.ingredients { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+.ing-ico { width: 46px; height: 46px; transition: transform .4s cubic-bezier(.3,1.6,.5,1); }
+.lift:hover .ing-ico { transform: rotate(-12deg) scale(1.1); }
+.latin { font-style: italic; color: var(--muted); font-size: .95rem; margin-top: -8px; }
+.props { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 4px 14px; margin: 0; font-size: .95rem; }
+.props dt { color: var(--muted); }
+.props dd { margin: 0; }
+.chipsrow { display: flex; flex-wrap: wrap; gap: 8px; }
+.pill { font-size: .9rem; padding: 5px 12px; border-radius: 999px; background: var(--tint-2); color: var(--ink); }
+.two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; }
+.tablewrap { overflow-x: auto; }
+table.t { width: 100%; border-collapse: collapse; font-size: .96rem; }
+table.t th, table.t td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+table.t thead th { font-size: .78rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+table.t tbody tr { transition: background .15s; }
+table.t tbody tr:hover { background: var(--tint); }
+table.t tbody th { font-weight: 700; color: var(--ink); }
+tr.mine { background: var(--tint-2); }
+.arrow { display: inline-block; min-width: 1.5em; font-weight: 700; }
+.up { color: var(--bad); } .down { color: var(--s-arabica); }
+.legal svg { width: 100%; height: auto; min-width: 520px; display: block; }
+.cube svg { width: 100%; max-width: 420px; height: auto; display: block; margin: 0 auto; }
+.cube .layer { transition: transform .45s cubic-bezier(.2,.8,.2,1); }
+.cube:hover .layer { transform: translate(calc(var(--i) * 6px), calc(var(--i) * -6px)); }
+.chart { width: 100%; overflow-x: auto; }
+.chart svg { width: 100%; min-width: 420px; height: auto; display: block; }
+.chartfig { margin: 0; position: relative; }
+.series-key { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: .85rem; color: var(--muted); }
+.series-key span { display: inline-flex; gap: 6px; align-items: center; }
+.series-key i { width: 16px; height: 0; border-top: 2px solid; display: inline-block; }
+.tip { position: absolute; pointer-events: none; background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 6px;
+       padding: 6px 9px; font-size: .82rem; box-shadow: 0 2px 8px rgb(0 0 0 / .12); white-space: nowrap; z-index: 2; font-variant-numeric: tabular-nums; }
+.sources { font-size: .9rem; color: var(--muted); display: grid; gap: 4px; margin: 0; padding-left: 1.1rem; }
+.endcta { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; justify-content: space-between; }
+
+/* ---------------- scan */
+.scanhead { padding-block: 40px 18px; display: grid; gap: 8px; }
+.drop { border: 2px dashed var(--crema); border-radius: 18px; padding: 34px 20px; display: grid; gap: 12px; justify-items: center; text-align: center;
+        background: var(--tint); transition: border-color .2s, background .2s, transform .2s; }
+.drop:hover { border-color: var(--coffee-2); }
+.drop.over { border-style: solid; border-color: var(--coffee); background: var(--tint-2); transform: scale(1.01); }
+.drop .big { font-family: var(--display); font-size: 1.45rem; color: var(--coffee); }
+.drop .upl { width: 54px; height: 54px; }
+.drop .upl .arrowgrp { transition: transform .3s ease; }
+.drop:hover .upl .arrowgrp, .drop.over .upl .arrowgrp { animation: bob .9s ease-in-out infinite; }
+@keyframes bob { 50% { transform: translateY(-5px); } }
+.filelist { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+.fileslot { font-size: .9rem; border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 4px 10px; color: var(--muted); transition: all .2s; }
+.fileslot.ok { border-color: var(--ok); color: var(--ok); background: var(--ok-bg); }
+input[type=file] { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.status { font-size: .95rem; display: flex; flex-wrap: wrap; gap: 6px 14px; color: var(--muted); }
+.status b { color: var(--ink); }
+.progress { height: 6px; background: var(--track); border-radius: 3px; overflow: hidden; }
+.progress > div { height: 100%; width: 0; background: var(--coffee-2); transition: width .15s; }
+.error { border-left: 4px solid var(--bad); background: var(--bad-bg); color: var(--ink); padding: 10px 14px; border-radius: 6px; }
+.empty { border: 1px dashed var(--line); border-radius: 16px; padding: 30px 20px; text-align: center; color: var(--muted); display: grid; gap: 8px; justify-items: center; }
+.empty svg { width: 40px; height: 40px; opacity: .8; }
+.scanbox { overflow-x: auto; border-radius: 12px; background: #000; }
+#scanCanvas { display: block; min-width: 720px; width: 100%; cursor: crosshair; }
+.hint { font-size: .92rem; color: var(--muted); }
+.reveal { animation: viewIn .45s cubic-bezier(.2,.7,.2,1) both; }
+.result-head { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: baseline; justify-content: space-between; }
+.type { font-family: var(--display); font-size: clamp(1.6rem, 3vw, 2.1rem); color: var(--ink); line-height: 1.15; }
+.conf { font-size: .9rem; padding: 3px 10px; border-radius: 999px; background: var(--track); color: var(--ink); font-weight: 700; }
+.comp { display: grid; gap: 10px; }
+.comp-row { display: grid; grid-template-columns: 9.5rem minmax(0, 1fr) 11rem; gap: 12px; align-items: center; }
+.comp-row .name { font-weight: 700; display: flex; gap: 8px; align-items: center; }
+.sw { width: 11px; height: 11px; border-radius: 2px; flex: none; }
+.bar { height: 14px; background: var(--track); border-radius: 0 4px 4px 0; position: relative; overflow: hidden; }
+.bar > i { position: absolute; inset: 0 auto 0 0; border-radius: 0 4px 4px 0; transition: width .6s cubic-bezier(.2,.8,.2,1); }
+.bar > em { position: absolute; top: 0; bottom: 0; background: color-mix(in srgb, var(--ink) 22%, transparent); }
+.val { text-align: right; font-variant-numeric: tabular-nums; font-size: 1.15rem; font-weight: 700; }
+.val small { font-size: .8rem; font-weight: 400; color: var(--muted); display: block; line-height: 1.2; }
+.notes { display: grid; gap: 8px; }
+.note { display: flex; gap: 10px; align-items: flex-start; padding: 9px 12px; border-radius: 8px; font-size: .95rem; }
+.note b.badge { flex: none; font-size: .7rem; letter-spacing: .07em; text-transform: uppercase; padding: 2px 7px; border-radius: 4px; margin-top: 2px; }
+.note.ok { background: var(--ok-bg); } .note.ok b.badge { background: var(--ok); color: var(--surface); }
+.note.warn { background: var(--warn-bg); } .note.warn b.badge { background: var(--warn); color: var(--surface); }
+.note.bad { background: var(--bad-bg); } .note.bad b.badge { background: var(--bad); color: var(--surface); }
+.panels { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 18px; }
+.panel { display: grid; gap: 10px; align-content: start; min-width: 0; }
+.panel figure { margin: 0; position: relative; }
+#mapCanvas { width: 100%; max-width: 360px; aspect-ratio: 1; display: block; border-radius: 10px; background: #000; }
+.legend { display: flex; gap: 8px; align-items: center; font-size: .82rem; color: var(--muted); flex-wrap: wrap; }
+.ramp { width: 160px; height: 10px; border-radius: 2px; }
+details { border-top: 1px solid var(--line); padding-top: 10px; }
+summary { cursor: pointer; font-weight: 700; color: var(--coffee); }
+dl.facts { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 4px 16px; margin: 10px 0 0; font-size: .93rem; }
+dl.facts dt { color: var(--muted); }
+dl.facts dd { margin: 0; font-variant-numeric: tabular-nums; min-width: 0; }
+.three { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+.list { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.list li { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px; align-items: start; font-size: .95rem; }
+.state { font-size: .7rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; padding: 2px 7px; border-radius: 4px; margin-top: 3px; }
+.state.ready { background: var(--ok-bg); color: var(--ok); }
+.state.soon { background: var(--track); color: var(--muted); }
+ol.steps { margin: 0; padding-left: 1.3rem; display: grid; gap: 8px; font-size: .95rem; }
+ol.steps li::marker { font-family: var(--display); color: var(--coffee-2); font-weight: 700; }
+.stack { display: grid; gap: 20px; padding-bottom: 20px; }
+footer { font-size: .85rem; color: var(--muted); border-top: 1px solid var(--line); padding-block: 16px 24px; margin-top: 30px; }
+
+@media (max-width: 900px) {
+  .panels, .three, .ingredients, .two { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 600px) {
+  .comp-row { grid-template-columns: 6.5rem minmax(0, 1fr) 7.5rem; }
+  .card { padding: 16px; }
+  .partnav { top: calc(env(safe-area-inset-top, 0px) + 88px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+  .spec-draw { stroke-dashoffset: 0; }
+}
+
+/* the reused components, squared off to match */
+.card { border-radius: 4px; }
+.drop, .empty, .scanbox, #mapCanvas, .fact { border-radius: 6px; }
+.part-label, .partnav { display: none; }
+.scanhead { padding-block: 46px 22px; }
+
+/* ---------------- inner pages: the home page's grid, readouts, handles and scan line */
+body { background: var(--bg) linear-gradient(105deg, var(--bg) 30%, var(--glow) 100%) fixed; }
+.inner-view { position: relative; }
+.inner-view > :not(.gridlines) { position: relative; z-index: 1; }
+.phead { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.ph-obj { grid-column: 1; display: grid; gap: 10px; padding: 20px 3vw 26px; align-content: end; }
+.ph-canvas { position: relative; height: 280px; }
+.ph-canvas canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.readout { display: grid; gap: 4px; justify-items: start; }
+.ro-k { font-stretch: 125%; font-weight: 700; font-size: .78rem; letter-spacing: .07em; text-transform: uppercase; color: var(--ink); }
+.ro-v { font-size: .84rem; color: var(--muted); }
+.readout .back { margin-top: 10px; display: none; }
+.ph-text { grid-column: 2 / 4; align-self: end; padding: 40px 3vw 30px; display: grid; gap: 16px; }
+.ph-title { font-stretch: 125%; font-weight: 700; text-transform: uppercase; font-size: clamp(1.9rem, 3.2vw, 3.1rem); line-height: 1.03; max-width: 22ch; }
+.ph-lede { max-width: 56ch; color: var(--muted); font-size: 1.1rem; }
+
+.pword { overflow: hidden; padding: 0 .5vw .5vw; border-bottom: 1px solid var(--line); }
+.pw { position: relative; width: max-content; font-family: var(--display); font-stretch: 125%; font-weight: 900; line-height: .76; letter-spacing: -.02em;
+      white-space: nowrap; user-select: none; }
+.pw sup { font-size: .085em; font-weight: 600; vertical-align: top; position: relative; top: .25em; margin-left: .15em; letter-spacing: 0; }
+.pw-out { display: block; color: transparent; -webkit-text-stroke: 1.2px color-mix(in srgb, var(--ink) 45%, transparent); }
+.pw-out sup { -webkit-text-stroke: 0; }
+.pw-fill { position: absolute; inset: 0; background: linear-gradient(95deg, color-mix(in srgb, var(--ink) 72%, var(--bg)) 0%, var(--ink) 55%);
+           -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; animation: pwfill 1.7s cubic-bezier(.55,0,.3,1) .2s both; }
+.pw-fill sup { -webkit-text-fill-color: var(--ink); }
+.pw-line { position: absolute; left: 0; right: 0; top: 0; height: 2px; background: var(--accent); opacity: 0;
+           box-shadow: 0 -12px 26px color-mix(in srgb, var(--accent) 50%, transparent); animation: sweepY 1.7s cubic-bezier(.55,0,.3,1) .2s both; }
+@keyframes pwfill { from { clip-path: inset(0 0 100% 0); } to { clip-path: inset(0 0 0 0); } }
+@keyframes sweepY { 0% { top: 0; opacity: 1; } 92% { top: 100%; opacity: 1; } 100% { top: 100%; opacity: 0; } }
+
+/* selection handles, as around the bean on the home page */
+.card, .cover-art, .drop { position: relative; }
+.card::after, .cover-art::after, .drop::after { content: ""; position: absolute; inset: -5px; pointer-events: none; z-index: 2;
+  background: linear-gradient(var(--ink), var(--ink)) left top / 8px 8px no-repeat, linear-gradient(var(--ink), var(--ink)) right top / 8px 8px no-repeat,
+              linear-gradient(var(--ink), var(--ink)) left bottom / 8px 8px no-repeat, linear-gradient(var(--ink), var(--ink)) right bottom / 8px 8px no-repeat;
+  opacity: 0; transform: scale(1.015); transition: opacity .25s, transform .3s cubic-bezier(.2,.8,.2,1); }
+.card:hover::after, .cover:hover .cover-art::after, .drop::after { opacity: 1; transform: none; }
+.card { border-radius: 2px; background: color-mix(in srgb, var(--surface) 90%, transparent); }
+.drop { border: 1px solid var(--line); border-radius: 2px; background: color-mix(in srgb, var(--surface) 72%, transparent); }
+.drop:hover { border-color: color-mix(in srgb, var(--ink) 35%, var(--line)); }
+.drop.over { border-style: solid; border-color: var(--accent); }
+.drop::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 2px; background: var(--accent); opacity: 0;
+                box-shadow: 0 -12px 26px color-mix(in srgb, var(--accent) 50%, transparent); }
+.drop.over::before { animation: sweepY 1.2s cubic-bezier(.55,0,.3,1) infinite; }
+.drop .big { font-stretch: 112%; font-weight: 650; color: var(--ink); }
+.empty { border-radius: 2px; }
+.inner { padding: 30px 3vw 24px; }
+.sitefoot .wrap { max-width: none; padding-inline: 3vw; }
+
+/* learn: three covers, one per grid column */
+.covers { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-bottom: 1px solid var(--line); }
+.cover { display: grid; gap: 14px; align-content: start; padding: 26px 3vw 30px; color: var(--ink); text-decoration: none; transition: background .3s; }
+.cover:hover { background: color-mix(in srgb, var(--surface) 50%, transparent); }
+.cover-top { display: flex; justify-content: space-between; align-items: baseline; color: var(--muted); font-size: .9rem; }
+.cover-no { font-stretch: 125%; font-weight: 800; color: var(--accent); font-size: 1rem; }
+.cover-art { aspect-ratio: 5 / 4; }
+.cover-img { position: absolute; inset: 0; overflow: hidden; background: var(--tint-2); }
+.cover-img svg { width: 100%; height: 100%; display: block; transition: transform .8s cubic-bezier(.2,.8,.2,1); }
+.cover:hover .cover-img svg { transform: scale(1.05); }
+.cover-img::after { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 2px; background: var(--accent); opacity: 0;
+                    box-shadow: 0 -12px 26px color-mix(in srgb, var(--accent) 60%, transparent); }
+.cover:hover .cover-img::after { animation: sweepY 1.1s cubic-bezier(.55,0,.3,1) both; }
+.cover h2 { font-stretch: 112%; font-size: 1.5rem; font-weight: 700; line-height: 1.15; }
+.cover-foot { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--line); padding-top: 12px; font-weight: 600; }
+
+/* articles: contents rail in the first column, the text across the other two */
+.abody { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.rail { grid-column: 1; padding: 36px 3vw 40px; }
+.rail-in { position: sticky; top: 92px; display: grid; gap: 14px; justify-items: start; }
+.toc { list-style: none; margin: 0; padding: 0; counter-reset: toc; border-bottom: 1px solid var(--line); width: 100%; }
+.toc li { counter-increment: toc; }
+.toc button { font: inherit; font-size: .95rem; line-height: 1.35; text-align: left; width: 100%; display: grid; grid-template-columns: 2.4em minmax(0, 1fr); gap: 6px;
+              padding: 9px 0; background: none; border: 0; border-top: 1px solid var(--line); color: var(--muted); cursor: pointer; transition: color .2s; }
+.toc button::before { content: counter(toc, decimal-leading-zero); font-stretch: 125%; font-weight: 700; font-size: .78rem; padding-top: .2em; }
+.toc button:hover { color: var(--ink); }
+.toc button[aria-current="true"] { color: var(--ink); font-weight: 600; }
+.toc button[aria-current="true"]::before { color: var(--accent); }
+.amain { grid-column: 2 / 4; padding: 36px 3vw 64px; display: grid; gap: 22px; min-width: 0; align-content: start; }
+.amain > * { scroll-margin-top: 92px; }
+.art-end { display: grid; gap: 18px; padding-top: 10px; }
+
+@media (max-width: 860px) {
+  .inner-view .gridlines { display: none; }
+  .phead, .abody, .covers { grid-template-columns: minmax(0, 1fr); }
+  .ph-obj { grid-row: 1; padding: 16px 20px 4px; }
+  .ph-text { grid-column: 1; grid-row: 2; padding: 12px 20px 24px; }
+  .ph-canvas { height: 210px; }
+  .readout .back { display: inline-flex; }
+  .pword { padding: 0 20px 6px; }
+  .rail { display: none; }
+  .amain { grid-column: 1; padding: 26px 20px 50px; }
+  .cover { padding: 24px 20px 28px; border-top: 1px solid var(--line); }
+  .cover:first-child { border-top: 0; }
+  .inner { padding: 24px 20px 10px; }
+  .sitefoot .wrap { padding-inline: 20px; }
+}
+
+
+@media (max-width: 480px) {
+  .brand { font-stretch: 100%; font-size: .98rem; }
+  .hero-stats { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  .hero-stats div { border-left: 0; padding: 0; }
+}
+@media (max-width: 980px) {
+}
+@media (max-width: 860px) {
+  .tb { grid-template-columns: 1fr auto; }
+  .menu-btn { display: inline-block; }
+  .cta { display: none; }
+  .nav { display: none; grid-column: 1 / -1; flex-direction: column; padding-bottom: 10px; }
+  body.menu-open .nav { display: flex; }
+  .nav a { border-left: 0; border-top: 1px solid var(--line); padding: 14px 4px; }
+  .nav a:last-child { border-right: 0; }
+  .nav a::after { left: 4px; right: auto; width: 40px; bottom: 8px; }
+  .hero { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto auto auto; }
+  .gridlines { display: none; }
+  .bean-wrap { grid-row: 1; width: min(100%, 520px); aspect-ratio: 1 / 1.08; justify-self: center; margin-right: 0; }
+  .hero-stats div { padding-right: 14px; }
+  .hero-copy { grid-column: 1; grid-row: 2; padding: 0 20px 26px; }
+  .hero-links { grid-column: 1; grid-row: 3; grid-template-columns: minmax(0, 1fr); gap: 10px; padding: 0 20px 26px; }
+  .wordmark { grid-column: 1; grid-row: 4; }
+}
+</style>
+
+<div id="readbar" aria-hidden="true"></div>
+<header class="topbar">
+  <div class="tb">
+    <a class="brand" href="#home" aria-label="Coffee Adulterant Detector, home"><svg viewBox="0 0 32 32" aria-hidden="true"><ellipse cx="16" cy="16" rx="10.5" ry="14" transform="rotate(32 16 16)" fill="currentColor"/><path d="M12 4.6 C 20 11.5, 12.5 20.5, 20.5 27.4" stroke="var(--bg)" stroke-width="2.6" fill="none" stroke-linecap="round"/></svg><span>Coffee Adulterant Detector</span></a>
+    <nav class="nav" id="navMenu" aria-label="Pages">
+      <a href="#home" data-nav="home">Home</a>
+      <a href="#learn" data-nav="learn">Learn</a>
+      <a href="#scan" data-nav="scan">Scan</a>
+    </nav>
+    <button class="menu-btn" id="menuBtn" type="button" aria-expanded="false" aria-controls="navMenu">Menu</button>
+    <a class="cta" href="#scan">Scan a sample<svg viewBox="0 0 32 32" aria-hidden="true"><ellipse cx="16" cy="16" rx="10.5" ry="14" transform="rotate(32 16 16)" fill="currentColor"/><path d="M12 4.6 C 20 11.5, 12.5 20.5, 20.5 27.4" stroke="var(--bg)" stroke-width="2.6" fill="none" stroke-linecap="round"/></svg></a>
+  </div>
+</header>
+
+<main>
+  <section class="view home" id="viewHome" aria-label="Coffee Adulterant Detector">
+    <div class="hero">
+      <div class="gridlines" aria-hidden="true"><i></i><i></i><i></i></div>
+      <div class="bean-wrap" aria-hidden="true"><canvas id="beanCanvas"></canvas></div>
+      <div class="hero-copy">
+        <h1 class="hero-title">Coffee<br>adulterant<br>detector</h1>
+        <p class="hero-sub">Is there chicory in your coffee, and how much? One short-wave infrared scan of the ground powder tells you the blend type and the chicory content of every dish.</p>
+      </div>
+      <div class="hero-links">
+        <a class="rowlink" href="#learn"><span class="rl-text"><small>01 · Read</small><b>Learn about coffee &amp; HSI</b></span><span class="rl-go"><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="square"/></svg></span></a>
+        <a class="rowlink primary" href="#scan"><span class="rl-text"><small>02 · Analyse</small><b>Scan a sample</b></span><span class="rl-go"><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="square"/></svg></span></a>
+      </div>
+      <div class="wordmark" id="wordmark" aria-hidden="true">COFFEE<sup>SWIR</sup></div>
+    </div>
+  </section>
+
+  <section class="view inner-view" id="viewLearn" aria-label="Learn" hidden>
+    <div class="gridlines" aria-hidden="true"><i></i><i></i><i></i></div>
+    <header class="phead">
+      <div class="ph-obj">
+        <div class="ph-canvas" aria-hidden="true"><canvas id="wireLearn"></canvas></div>
+        <div class="readout"><span class="ro-k">Index · 3 articles</span><span class="ro-v">about 7 minutes of reading</span></div>
+      </div>
+      <div class="ph-text">
+        <h1 class="ph-title">What's in your cup, and how a camera can tell</h1>
+        <p class="ph-lede">Three short reads on what goes into ground coffee, how a hyperspectral camera sees it, and how laboratories catch adulteration. Pick one.</p>
+      </div>
+    </header>
+    <div class="pword" aria-hidden="true"><div class="pw" data-cap="0.24"><span class="pw-out">LEARN<sup>3 READS</sup></span><span class="pw-fill">LEARN<sup>3 READS</sup></span><i class="pw-line"></i></div></div>
+    <div class="covers">
+      <a class="cover" href="#coffee">
+        <div class="cover-top"><span class="cover-no">01</span><span>2 min read</span></div>
+        <div class="cover-art"><div class="cover-img" id="art1"></div></div>
+        <h2>Coffee and what gets mixed into it</h2>
+        <p class="muted">Arabica, robusta and chicory, the fillers found in ground coffee, what they do to the cup, and what the law allows.</p>
+        <span class="cover-foot"><span>Read the article</span><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="square"/></svg></span>
+      </a>
+      <a class="cover" href="#hsi">
+        <div class="cover-top"><span class="cover-no">02</span><span>3 min read</span></div>
+        <div class="cover-art"><div class="cover-img" id="art2"></div></div>
+        <h2>Seeing chemistry with hyperspectral imaging</h2>
+        <p class="muted">A spectrum at every pixel: which bonds absorb where in coffee, and why chicory shows up so clearly.</p>
+        <span class="cover-foot"><span>Read the article</span><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="square"/></svg></span>
+      </a>
+      <a class="cover" href="#methods">
+        <div class="cover-top"><span class="cover-no">03</span><span>2 min read</span></div>
+        <div class="cover-art"><div class="cover-img" id="art3"></div></div>
+        <h2>How coffee adulteration is detected</h2>
+        <p class="muted">Microscopy, chromatography, DNA, NMR, spectroscopy and imaging, compared on speed, cost and what they can see.</p>
+        <span class="cover-foot"><span>Read the article</span><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="square"/></svg></span>
+      </a>
+    </div>
+  </section>
+
+  <section class="view inner-view" id="viewCoffee" aria-label="Coffee and what gets mixed into it" hidden>
+    <div class="gridlines" aria-hidden="true"><i></i><i></i><i></i></div>
+    <header class="phead">
+      <div class="ph-obj">
+        <div class="ph-canvas" aria-hidden="true"><canvas id="wireCoffee"></canvas></div>
+        <div class="readout"><span class="ro-k">Article 01 / 03</span><span class="ro-v">2 min read</span><a class="back" href="#learn"><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H6M11 6l-6 6 6 6" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="square"/></svg>All articles</a></div>
+      </div>
+      <div class="ph-text">
+        <h1 class="ph-title">Coffee and what gets mixed into it</h1>
+        <p class="ph-lede">Coffee powder looks the same whether it is pure arabica, cheap robusta or a third chicory. Here is what each ingredient is and what mixing does to the cup.</p>
+      </div>
+    </header>
+    <div class="pword" aria-hidden="true"><div class="pw" data-cap="0.24"><span class="pw-out">BLENDS<sup>01</sup></span><span class="pw-fill">BLENDS<sup>01</sup></span><i class="pw-line"></i></div></div>
+    <div class="abody">
+      <aside class="rail" aria-label="In this article"><div class="rail-in"><span class="ro-k">In this article</span><ol class="toc"></ol><a class="back" href="#learn"><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H6M11 6l-6 6 6 6" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="square"/></svg>All articles</a></div></aside>
+      <div class="amain">
+        <p class="measure">Ground coffee is rarely one thing. Most packs are a blend of two coffee species, and many South Indian filter coffees also contain roasted chicory root. Blends are legitimate when they are declared. They become adulteration when a cheaper ingredient is added without saying so, or in larger amounts than the label claims.</p>
+        <div class="ingredients" data-toc="Arabica, robusta and chicory">
+          <div class="card lift">
+            <svg class="ing-ico" viewBox="0 0 46 46" aria-hidden="true"><ellipse cx="23" cy="23" rx="13" ry="18" transform="rotate(25 23 23)" fill="var(--s-arabica)"/><path d="M17 9 C 27 18, 18 28, 28 37" stroke="var(--surface)" stroke-width="2.4" fill="none" stroke-linecap="round"/></svg>
+            <h3>Arabica</h3><p class="latin">Coffea arabica</p>
+            <p>The higher-grown, more delicate species. It makes a sweeter, more aromatic and more acidic cup, and sells for roughly twice the price of robusta.</p>
+            <dl class="props"><dt>Caffeine</dt><dd>about 1.2 %</dd><dt>Coffee oil</dt><dd>about 15–17 %</dd><dt>In the cup</dt><dd>sweet, fruity, bright acidity</dd></dl>
+          </div>
+          <div class="card lift">
+            <svg class="ing-ico" viewBox="0 0 46 46" aria-hidden="true"><ellipse cx="23" cy="23" rx="15" ry="17" transform="rotate(-20 23 23)" fill="var(--s-robusta)"/><path d="M16 10 C 26 18, 18 28, 30 36" stroke="var(--surface)" stroke-width="2.4" fill="none" stroke-linecap="round"/></svg>
+            <h3>Robusta</h3><p class="latin">Coffea canephora</p>
+            <p>A hardier, higher-yielding species grown at lower altitude, and most of India's coffee crop. It brings strength, bitterness and a thick crema.</p>
+            <dl class="props"><dt>Caffeine</dt><dd>about 2.2 %</dd><dt>Coffee oil</dt><dd>about 7–10 %</dd><dt>In the cup</dt><dd>strong, bitter, earthy</dd></dl>
+          </div>
+          <div class="card lift">
+            <svg class="ing-ico" viewBox="0 0 46 46" aria-hidden="true"><path d="M23 6 C 30 14, 29 26, 23 41 C 17 26, 16 14, 23 6 Z" fill="var(--s-chicory)"/><path d="M23 12 V36" stroke="var(--surface)" stroke-width="2" stroke-linecap="round"/><path d="M23 8 C 18 3, 12 4, 10 6 M23 8 C 28 3, 34 4, 36 6" stroke="var(--ok)" stroke-width="2.4" fill="none" stroke-linecap="round"/></svg>
+            <h3>Chicory</h3><p class="latin">Cichorium intybus, roasted root</p>
+            <p>Not coffee at all: the root of a plant related to dandelion, dried, roasted and ground. It is rich in inulin, a fibre that caramelises when roasted.</p>
+            <dl class="props"><dt>Caffeine</dt><dd>none</dd><dt>Coffee oil</dt><dd>very little</dd><dt>In the cup</dt><dd>dark, full-bodied, roasted bitterness</dd></dl>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Other adulterants reported in ground coffee</h3>
+          <p class="measure">Chicory and robusta are the common ones in India. Studies around the world also report cheaper fillers that roast to a coffee-like brown powder:</p>
+          <div class="chipsrow"><span class="pill">roasted barley</span><span class="pill">corn</span><span class="pill">wheat</span><span class="pill">soybean</span><span class="pill">coffee husks and sticks</span><span class="pill">date seeds</span><span class="pill">caramelised sugar</span></div>
+          <p class="muted" style="font-size:.92rem">Cereal fillers also carry a health risk: barley and wheat contain gluten, which is unsafe for people with coeliac disease when it is not declared.</p>
+        </div>
+
+        <div class="card">
+          <h3>How the adulterants change pure coffee</h3>
+          <div class="tablewrap">
+            <table class="t">
+              <thead><tr><th scope="col">Property</th><th scope="col">Adding chicory to coffee</th><th scope="col">Adding robusta to arabica</th></tr></thead>
+              <tbody>
+                <tr><th scope="row">Caffeine</th><td><span class="arrow down">↓</span>Diluted: chicory has none, so 30 % chicory means about 30 % less caffeine.</td><td><span class="arrow up">↑</span>Robusta has nearly twice the caffeine.</td></tr>
+                <tr><th scope="row">Aroma &amp; acidity</th><td><span class="arrow down">↓</span>Fewer coffee aroma compounds per cup; a flatter taste.</td><td><span class="arrow down">↓</span>Less of arabica's sweetness and bright acidity.</td></tr>
+                <tr><th scope="row">Body &amp; colour</th><td><span class="arrow up">↑</span>Darker, thicker brew from caramelised inulin; why filter coffee carries milk so well.</td><td><span class="arrow up">↑</span>Heavier body and more crema.</td></tr>
+                <tr><th scope="row">Bitterness</th><td><span class="arrow up">↑</span>Roasted, burnt-sugar bitterness.</td><td><span class="arrow up">↑</span>A harsher, more bitter cup.</td></tr>
+                <tr><th scope="row">Cost to the maker</th><td><span class="arrow down">↓</span>Chicory is much cheaper than coffee.</td><td><span class="arrow down">↓</span>Robusta costs about half as much as arabica.</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="muted" style="font-size:.92rem">The price gap is why both mixtures tempt fraud: a pack labelled "100 % arabica" or "pure coffee" can quietly carry the cheaper ingredient.</p>
+        </div>
+
+        <div class="card legal">
+          <h3>When a blend becomes adulteration</h3>
+          <p class="measure">In India, roasted coffee-chicory powder must contain <b>at least 51 % coffee</b>, so no more than 49 % chicory, and every pack must declare both percentages (IS 3802, FSSAI advisory of November 2021). When FSSAI checked 42 companies in 2021, only 13 complied with the labelling rules.</p>
+          <div class="tablewrap"><svg id="legalSvg" viewBox="0 0 760 112" role="img" aria-label="Chicory content from 0 to 100 percent: up to 49 percent is allowed if declared, above 49 percent is not allowed; the app is calibrated for 0 to 50 percent"></svg></div>
+        </div>
+      
+        <div class="art-end"><a class="nextcard" href="#hsi"><span class="muted">Next read</span><b>Seeing chemistry with hyperspectral imaging</b><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="square"/></svg></a></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="view inner-view" id="viewHsi" aria-label="Seeing chemistry with hyperspectral imaging" hidden>
+    <div class="gridlines" aria-hidden="true"><i></i><i></i><i></i></div>
+    <header class="phead">
+      <div class="ph-obj">
+        <div class="ph-canvas" aria-hidden="true"><canvas id="wireHsi"></canvas></div>
+        <div class="readout"><span class="ro-k">Article 02 / 03</span><span class="ro-v">3 min read · arabica, robusta and chicory, as measured</span><a class="back" href="#learn"><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H6M11 6l-6 6 6 6" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="square"/></svg>All articles</a></div>
+      </div>
+      <div class="ph-text">
+        <h1 class="ph-title">Seeing chemistry with hyperspectral imaging</h1>
+        <p class="ph-lede">A hyperspectral camera records a full spectrum at every pixel. Those spectra carry the chemistry of the powder, band by band.</p>
+      </div>
+    </header>
+    <div class="pword" aria-hidden="true"><div class="pw" data-cap="0.24"><span class="pw-out">SPECTRA<sup>02</sup></span><span class="pw-fill">SPECTRA<sup>02</sup></span><i class="pw-line"></i></div></div>
+    <div class="abody">
+      <aside class="rail" aria-label="In this article"><div class="rail-in"><span class="ro-k">In this article</span><ol class="toc"></ol><a class="back" href="#learn"><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H6M11 6l-6 6 6 6" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="square"/></svg>All articles</a></div></aside>
+      <div class="amain">
+          <div class="two">
+            <div style="display:grid;gap:12px;align-content:start" class="measure">
+              <h3>A camera that records a spectrum at every pixel</h3>
+              <p>An ordinary camera records three colours per pixel. A hyperspectral camera records hundreds of narrow wavelength bands, so every pixel carries its own <b>spectrum</b>: how much light the material reflects at each wavelength. Stacked together, the image becomes a <b>data cube</b> with two spatial dimensions and one spectral one.</p>
+              <p>This project uses a <b>HySpex SWIR-384</b>: 384 pixels across, 288 bands from about 950 to 2500 nm, in the short-wave infrared. It is a push-broom camera: it records one line at a time while the samples move underneath, building the image line by line.</p>
+              <p>A white <b>Spectralon</b> strip at the start of every scan reflects almost all light at every wavelength. Dividing each pixel by the white strip in the same column turns the raw signal into <b>reflectance</b>, which no longer depends on the lamps or the camera's sensitivity.</p>
+            </div>
+            <figure class="card cube" style="margin:0">
+              <svg viewBox="0 0 456 300" role="img" aria-label="A hyperspectral data cube: image layers for each wavelength, and the spectrum of one pixel drawn through them">
+                <g class="layer" style="--i:4"><rect x="150" y="30" width="190" height="130" rx="6" fill="var(--s-chicory)" opacity=".55"/></g>
+                <g class="layer" style="--i:3"><rect x="130" y="50" width="190" height="130" rx="6" fill="var(--crema)" opacity=".7"/></g>
+                <g class="layer" style="--i:2"><rect x="110" y="70" width="190" height="130" rx="6" fill="var(--coffee-2)" opacity=".75"/></g>
+                <g class="layer" style="--i:1"><rect x="90" y="90" width="190" height="130" rx="6" fill="var(--wood-2)" opacity=".85"/></g>
+                <g class="layer" style="--i:0"><rect x="70" y="110" width="190" height="130" rx="6" fill="var(--coffee)"/>
+                  <circle cx="120" cy="160" r="22" fill="var(--wood)"/><circle cx="196" cy="186" r="22" fill="var(--wood)"/>
+                  <rect x="112" y="152" width="14" height="14" fill="none" stroke="#ffffff" stroke-width="2"/></g>
+                <text x="165" y="262" text-anchor="middle" font-size="13" fill="var(--muted)">x, y: the image</text>
+                <text x="365" y="70" font-size="13" fill="var(--muted)">λ: 288 bands</text>
+                <path d="M350 80 L355 160" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#ah)"/>
+                <defs><marker id="ah" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="var(--muted)"/></marker></defs>
+              </svg>
+              <figcaption class="muted" style="font-size:.88rem;text-align:center">Each wavelength is one image layer. One pixel, read through all the layers, gives its spectrum. Hover to fan the layers out.</figcaption>
+            </figure>
+          </div>
+
+          <div class="card">
+            <h3>Why short-wave infrared sees chemistry</h3>
+            <p class="measure">Light between 1000 and 2500 nm makes chemical bonds vibrate. Each bond (C–H in oils, O–H in water and sugars, N–H in proteins and caffeine) absorbs at its own set of wavelengths, called overtones and combination bands. Where a compound absorbs, the reflectance dips. So the depth of a dip tracks how much of that compound is present, roughly in proportion once reflectance R is turned into absorbance, log₁₀(1/R). That proportionality is why simple straight-line models (PLSR) measure chicory so well.</p>
+            <div class="series-key" id="learnKey"></div>
+            <figure class="chart chartfig"><svg id="learnSvg" viewBox="0 0 640 300" role="img" aria-label="Reflectance spectra of pure robusta, pure arabica and pure chicory from 1000 to 2450 nanometres, with absorption bands marked"></svg><div class="tip" id="learnTip" hidden></div></figure>
+            <p class="muted" style="font-size:.9rem">Measured in this project (1 Sep scans). Hover the chart to read values at any wavelength.</p>
+          </div>
+
+          <div class="card">
+            <h3>The bands, and what they tell us about coffee</h3>
+            <div class="tablewrap">
+              <table class="t">
+                <thead><tr><th scope="col">Wavelength</th><th scope="col">Bond vibration</th><th scope="col">Compounds in coffee</th><th scope="col">What it tells us</th></tr></thead>
+                <tbody>
+                  <tr><th scope="row" class="num">≈ 1210 nm</th><td>C–H, second overtone</td><td>oils, sugars</td><td>general organic content; weak</td></tr>
+                  <tr><th scope="row" class="num">≈ 1450 nm</th><td>O–H, first overtone</td><td>water, sugars</td><td>moisture; changes from day to day</td></tr>
+                  <tr><th scope="row" class="num">≈ 1690 nm</th><td>C–H of aromatic and methyl groups, first overtone</td><td>caffeine, chlorogenic acids</td><td>slightly stronger in robusta</td></tr>
+                  <tr><th scope="row" class="num">1730, 1760 nm</th><td>C–H of CH₂ chains, first overtone</td><td>coffee oil (lipids)</td><td>strong in coffee, weak in chicory: the main chicory signal</td></tr>
+                  <tr><th scope="row" class="num">≈ 1940 nm</th><td>O–H, combination</td><td>water</td><td>moisture; too variable between days to rely on</td></tr>
+                  <tr><th scope="row" class="num">≈ 2100 nm</th><td>O–H + C–O, combination</td><td>carbohydrates: inulin sugars, cellulose</td><td>carbohydrate-rich materials such as chicory</td></tr>
+                  <tr><th scope="row" class="num">2180–2260 nm</th><td>N–H and C–H combinations</td><td>proteins, caffeine, phenolics</td><td>a robusta-richer region (assignment tentative)</td></tr>
+                  <tr><th scope="row" class="num">2310, 2350 nm</th><td>C–H, combination</td><td>coffee oil</td><td>the second oil band; large coffee–chicory contrast</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3>Why HSI is a good way to measure chicory</h3>
+            <ul class="list">
+              <li><span class="state ready">Chemistry</span><span><b>A strong, specific signal.</b> Coffee is oily and chicory is not: the 2310 nm oil band measures 0.095 in pure arabica, 0.085 in pure robusta and only 0.024 in pure chicory. Every percent of chicory makes the dips a little shallower.</span></li>
+              <li><span class="state ready">Pixels</span><span><b>Thousands of spectra per dish.</b> A single powder grain is either coffee or chicory, so one pixel says little. HSI averages 12 × 12-pixel patches (about 9 mm) across the whole dish, so the result reflects the bulk blend, not one grain.</span></li>
+              <li><span class="state ready">Maps</span><span><b>It shows where, not just how much.</b> Because every patch gets its own value, the app can map chicory across a dish and show whether a blend is evenly mixed.</span></li>
+              <li><span class="state ready">Practical</span><span><b>Fast and non-destructive.</b> No chemicals and no extraction; a dish is scanned in seconds and can be measured again.</span></li>
+              <li><span class="state ready">Tested</span><span><b>About 1 % error on unseen days.</b> In this project the models were tested on whole scanning sessions they never saw, the strictest test the data allows.</span></li>
+              <li><span class="state soon">Limits</span><span><b>Arabica and robusta differ far less.</b> Their spectra are close (a little more oil in arabica, more caffeine and phenolics in robusta), so the arabica : robusta split is much harder than chicory. Each calibration also belongs to its camera and lamp setup.</span></li>
+            </ul>
+          </div>
+        
+        <div class="art-end"><a class="nextcard" href="#methods"><span class="muted">Next read</span><b>How coffee adulteration is detected</b><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="square"/></svg></a></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="view inner-view" id="viewMethods" aria-label="How coffee adulteration is detected" hidden>
+    <div class="gridlines" aria-hidden="true"><i></i><i></i><i></i></div>
+    <header class="phead">
+      <div class="ph-obj">
+        <div class="ph-canvas" aria-hidden="true"><canvas id="wireMethods"></canvas></div>
+        <div class="readout"><span class="ro-k">Article 03 / 03</span><span class="ro-v">2 min read</span><a class="back" href="#learn"><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H6M11 6l-6 6 6 6" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="square"/></svg>All articles</a></div>
+      </div>
+      <div class="ph-text">
+        <h1 class="ph-title">How coffee adulteration is detected</h1>
+        <p class="ph-lede">From a microscope slide to a camera that sees chemistry: six ways to check what is really in a pack of coffee.</p>
+      </div>
+    </header>
+    <div class="pword" aria-hidden="true"><div class="pw" data-cap="0.24"><span class="pw-out">METHODS<sup>03</sup></span><span class="pw-fill">METHODS<sup>03</sup></span><i class="pw-line"></i></div></div>
+    <div class="abody">
+      <aside class="rail" aria-label="In this article"><div class="rail-in"><span class="ro-k">In this article</span><ol class="toc"></ol><a class="back" href="#learn"><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H6M11 6l-6 6 6 6" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="square"/></svg>All articles</a></div></aside>
+      <div class="amain">
+        <p class="measure">Food laboratories use several families of methods. They trade speed against detail, and most destroy the sample. Hyperspectral imaging sits at the fast, non-destructive end, with the extra ability to map the sample.</p>
+        <div class="card" data-toc="Six techniques compared">
+          <div class="tablewrap">
+            <table class="t">
+              <thead><tr><th scope="col">Technique</th><th scope="col">What it looks at</th><th scope="col">Speed</th><th scope="col">Sample destroyed?</th><th scope="col">Map of the sample?</th><th scope="col">Typical use</th></tr></thead>
+              <tbody>
+                <tr><th scope="row">Microscopy</th><td>particle shapes and plant cell structures</td><td>minutes</td><td>no</td><td>no</td><td>quick screening by an expert; qualitative</td></tr>
+                <tr><th scope="row">Chromatography (HPLC)</th><td>sugar profile, e.g. glucose, xylose, fructose</td><td>hours (extraction)</td><td>yes</td><td>no</td><td>reference laboratory method</td></tr>
+                <tr><th scope="row">DNA (real-time PCR)</th><td>species-specific DNA</td><td>hours</td><td>yes</td><td>no</td><td>species identity; roasting damages DNA</td></tr>
+                <tr><th scope="row">NMR spectroscopy</th><td>molecular fingerprints, e.g. 16-O-methylcafestol for robusta</td><td>minutes to hours</td><td>yes (extraction)</td><td>no</td><td>robusta in arabica; costly instrument</td></tr>
+                <tr><th scope="row">NIR / FTIR spectroscopy</th><td>an average spectrum of one spot</td><td>seconds</td><td>no</td><td>no</td><td>rapid screening once calibrated</td></tr>
+                <tr class="mine"><th scope="row">Hyperspectral imaging (this app)</th><td>a spectrum at every pixel</td><td>seconds per scan</td><td>no</td><td><b>yes</b></td><td>measuring and mapping blends</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card" style="background:var(--tint)">
+          <h3>Sources</h3>
+          <ul class="sources">
+            <li><a href="https://mail.fssai.gov.in/upload/advisories/2021/11/6195ef50cb7b3Letter_Compliance_Coffee_Chicory_18_11_2021.pdf" target="_blank" rel="noopener">FSSAI: compliance with respect to coffee-chicory mixtures (Nov 2021)</a></li>
+            <li><a href="https://foodsafetyhelpline.com/fssai-compliance/chicory-coffee-chicory-mixture-and-how-it-has-been-discussed-under-fssr/" target="_blank" rel="noopener">Chicory and coffee-chicory mixture under FSSR and IS 3802</a></li>
+            <li><a href="https://krishijagran.com/agriculture-world/fssai-found-only-13-out-of-42-companies-complying-with-coffee-coffee-chicory-mixture-labelling-norms" target="_blank" rel="noopener">Krishi Jagran: FSSAI found 13 of 42 companies compliant</a></li>
+            <li><a href="https://www.sciencegate.app/document/10.1093/jaocint/qsz019" target="_blank" rel="noopener">Review of analytical methods to detect adulteration in coffee (J. AOAC Int., 2020)</a></li>
+            <li><a href="https://www.gov.uk/government/news/review-of-methods-for-coffee-bean-authenticity-testing" target="_blank" rel="noopener">UK government: review of methods for coffee bean authenticity testing</a></li>
+            <li><a href="https://link.springer.com/article/10.1007/s12161-019-01502-x" target="_blank" rel="noopener">Forchetti &amp; Poppi 2020: adulterants in roasted coffee by NIR hyperspectral imaging</a></li>
+            <li><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9562924/" target="_blank" rel="noopener">Sahachairungrueng et al., Foods 2022: robusta in arabica by NIR hyperspectral imaging</a></li>
+            <li><a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5859211/" target="_blank" rel="noopener">Hyperspectral imaging of single green coffee beans: lipid content of arabica and robusta</a></li>
+            <li><a href="https://www.nature.com/articles/s41598-026-60975-z" target="_blank" rel="noopener">Scientific Reports 2026: roasted barley, date seeds and soybean in ground arabica</a></li>
+          </ul>
+          <p class="muted" style="font-size:.85rem">Caffeine and oil figures are typical literature values for green beans; individual lots vary. Band depths are this project's measurements.</p>
+        </div>
+      
+        <div class="art-end"><a class="nextcard" href="#scan"><span class="muted">You have read all three</span><b>Now scan a sample</b><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="square"/></svg></a></div>
+      </div>
+    </div>
+  </section>
+  <!-- =========================================================== SCAN -->
+  <section class="view inner-view" id="viewScan" aria-label="Scan a sample" hidden>
+    <div class="gridlines" aria-hidden="true"><i></i><i></i><i></i></div>
+    <header class="phead">
+      <div class="ph-obj">
+        <div class="ph-canvas" aria-hidden="true"><canvas id="wireScan"></canvas></div>
+        <div class="readout"><span class="ro-k">Workbench</span><span class="ro-v">SWIR push-broom scans · nothing is uploaded</span></div>
+      </div>
+      <div class="ph-text">
+        <h1 class="ph-title">Scan a sample</h1>
+        <p class="ph-lede">Add the scan's two files. The app reads them in your browser, finds the white strip and every petri dish, and analyses the dish you click.</p>
+      </div>
+    </header>
+    <div class="pword" aria-hidden="true"><div class="pw" data-cap="0.18"><span class="pw-out">SCAN<sup>SWIR</sup></span><span class="pw-fill">SCAN<sup>SWIR</sup></span><i class="pw-line"></i></div></div>
+    <div class="inner">
+      <div class="stack">
+        <div class="drop" id="drop">
+          <svg class="upl" viewBox="0 0 54 54" aria-hidden="true"><g class="arrowgrp"><path d="M27 34V12M18 21l9-9 9 9" stroke="var(--coffee)" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g><path d="M10 34v7a3 3 0 0 0 3 3h28a3 3 0 0 0 3-3v-7" stroke="var(--coffee-2)" stroke-width="3" fill="none" stroke-linecap="round"/></svg>
+          <span class="big">Drop your .hdr and .hyspex files here</span>
+          <span class="muted">The ENVI header (.hdr) and its data file: raw camera counts (.hyspex) or radiance (.img). Both at once, or one after the other.</span>
+          <div class="filelist"><span class="fileslot" id="slotHdr">.hdr: not added</span><span class="fileslot" id="slotData">.hyspex / .img: not added</span></div>
+          <label class="btn" for="fileInput">Choose files</label>
+          <input id="fileInput" type="file" multiple accept=".hdr,.hyspex,.img,.raw,.dat,.bin,.rad,.bil">
+          <span class="muted" style="font-size:.85rem">Read inside your browser; nothing is uploaded.</span>
+        </div>
+        <div id="errorBox" class="error" hidden></div>
+        <div class="status" id="status"></div>
+        <div class="progress" id="progress" hidden><div></div></div>
+
+        <div class="empty" id="emptyState">
+          <svg viewBox="0 0 40 40" aria-hidden="true"><ellipse cx="20" cy="26" rx="15" ry="5" fill="none" stroke="var(--muted)" stroke-width="2"/><ellipse cx="20" cy="25" rx="10" ry="2.5" fill="var(--crema)"/><path d="M20 6v10M15 11l5 5 5-5" stroke="var(--muted)" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <b>No scan loaded yet</b>
+          <span>Once you add the files, your scan and its dishes will appear here, and the results of the dish you click below it.</span>
+        </div>
+
+        <section class="card reveal" id="scanCard" hidden aria-labelledby="scanTitle">
+          <div class="row" style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:baseline">
+            <h2 id="scanTitle">Your scan</h2><span class="eyebrow">Click a dish</span>
+          </div>
+          <div class="scanbox"><canvas id="scanCanvas" height="180" aria-label="Scan with the white reference strip at the left and numbered petri dishes"></canvas></div>
+          <p class="hint" id="hint">Click a dish to analyse it. The white reference strip sits at the left end of the scan.</p>
+        </section>
+
+        <section class="card reveal" id="resultCard" hidden aria-labelledby="resTitle">
+          <div class="row" style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:baseline">
+            <h2 id="resTitle">Result</h2><span class="eyebrow" id="resDish"></span>
+          </div>
+          <div class="result-head">
+            <div style="display:grid;gap:4px;min-width:0">
+              <span class="eyebrow">Mixture type</span>
+              <span class="type" id="resType">—</span>
+            </div>
+            <span class="conf num" id="resConf"></span>
+          </div>
+          <div class="comp" id="comp"></div>
+          <div class="notes" id="notes"></div>
+          <div class="panels">
+            <div class="panel">
+              <h3 id="mapTitle">Chicory across the dish</h3>
+              <figure>
+                <canvas id="mapCanvas" width="360" height="360" aria-label="Map of the predicted chicory per block of patches"></canvas>
+                <div class="tip" id="mapTip" hidden></div>
+              </figure>
+              <div class="legend"><span class="num">0 %</span><canvas class="ramp" id="rampCanvas" width="160" height="10"></canvas><span class="num">50 %</span></div>
+              <p class="muted" id="spreadText" style="font-size:.9rem"></p>
+            </div>
+            <div class="panel">
+              <h3>Mean spectrum of the dish</h3>
+              <div class="series-key" id="seriesKey"></div>
+              <figure class="chart chartfig"><svg id="specSvg" viewBox="0 0 640 300" role="img" aria-label="Reflectance spectrum of the dish compared with pure robusta, pure arabica and pure chicory"></svg>
+                <div class="tip" id="specTip" hidden></div></figure>
+              <p class="muted" style="font-size:.88rem">Coffee oil absorbs at 1730 and 2310 nm. Chicory has little oil, so these dips get shallower as chicory goes up.</p>
+            </div>
+          </div>
+          <details>
+            <summary>Measurement details</summary>
+            <dl class="facts" id="facts"></dl>
+          </details>
+        </section>
+
+        <section class="three" aria-label="About the models">
+          <div class="card">
+            <h3>Mixtures it can tell apart</h3>
+            <ul class="list">
+              <li><span class="state ready">Ready</span><span><b>Robusta + chicory.</b> PLSR, 6 components. Error on unseen sessions about 0.9 % chicory.</span></li>
+              <li><span class="state ready">Ready</span><span><b>Arabica + chicory.</b> EMSC + PLSR, 4 components. Error on unseen sessions about 1.0 % chicory.</span></li>
+              <li><span class="state ready">Ready</span><span><b>Arabica + robusta + chicory.</b> First derivative + PLSR on 1650–1800 and 2150–2400 nm. Error about 0.9 % chicory. The arabica : robusta split is not measured.</span></li>
+              <li><span class="state ready">Ready</span><span><b>No chicory</b> (pure robusta, pure arabica, or an arabica + robusta blend) below the detection limit of about 2 %.</span></li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>How a dish is analysed</h3>
+            <ol class="steps">
+              <li>Raw camera counts lose their dark signal, taken from the file's own header.</li>
+              <li>Each pixel is divided by the Spectralon strip in the same column, giving reflectance.</li>
+              <li>The dish is found by its rim; rim, shadow and glare pixels are removed.</li>
+              <li>The powder is cut into 12 × 12 px patches (about 9 mm), turned into absorbance, and the least typical 10 % are dropped.</li>
+              <li>A classifier (PCA-LDA, 95 % correct on unseen days) picks the mixture; that mixture's model gives the chicory %.</li>
+            </ol>
+          </div>
+          <div class="card">
+            <h3>Limits</h3>
+            <ul class="list">
+              <li><span class="state soon">Range</span><span>Calibrated for 0–50 % chicory, matching the 49 % legal limit. Higher values are extrapolations.</span></li>
+              <li><span class="state soon">Setup</span><span>Trained on 99 dishes scanned on four days (1, 4, 7 and 8 Sep) with one HySpex SWIR-384, one lamp setup and one source of each ingredient.</span></li>
+              <li><span class="state soon">Blends</span><span>The arabica + robusta + chicory model assumes those blends hold chicory at the stated level; the lab notes should confirm it.</span></li>
+              <li><span class="state soon">Strip</span><span>Every scan needs the white Spectralon strip at its start.</span></li>
+            </ul>
+          </div>
+        </section>
+      </div>
+    </div>
+  </section>
+
+
+  <footer class="sitefoot"><div class="wrap ft">
+    <span><b style="color:var(--ink)">Coffee Adulterant Detector</b>, a SWIR hyperspectral imaging project at NIT Calicut</span>
+    <nav aria-label="Footer"><a href="#home">Home</a><a href="#learn">Learn</a><a href="#scan">Scan</a></nav>
+  </div></footer>
+</main>
+
+<script src="core.js"></script>
+<script src="models.js"></script>
+<script>
+(() => {
+  "use strict";
+  const $ = (id) => document.getElementById(id);
+  const models = CoffeeCore.prepareModels(window.COFFEE_MODELS);
+  const REF = models.references, WL = models.wavelengths;
+  const RAMP = ["#f6e7cc", "#e6c38f", "#c99252", "#93592a", "#4a2512"];
+  const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+  let S = null, pending = {};
+
+  const fmt = (x, d = 1) => (Number.isFinite(x) ? x.toFixed(d) : "–");
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  function rampColor(v) {
+    const t = Math.max(0, Math.min(1, v / 50)) * (RAMP.length - 1), i = Math.min(RAMP.length - 2, Math.floor(t)), f = t - i;
+    const a = RAMP[i], b = RAMP[i + 1], h = (s, k) => parseInt(s.slice(1 + 2 * k, 3 + 2 * k), 16);
+    return `rgb(${[0, 1, 2].map((k) => Math.round(h(a, k) + (h(b, k) - h(a, k)) * f)).join(",")})`;
+  }
+  function showError(msg) { const e = $("errorBox"); e.textContent = msg; e.hidden = !msg; }
+  function setProgress(p, label) {
+    const box = $("progress"); box.hidden = p === null; if (p !== null) box.firstElementChild.style.width = `${Math.round(p * 100)}%`;
+    if (label) $("hint").textContent = label;
+  }
+  function setStatus(parts) { $("status").innerHTML = parts.map((p) => `<span>${p}</span>`).join(""); }
+
+  // ---------------------------------------------------------------- pages (hash routes)
+  const ROUTES = { home: "viewHome", learn: "viewLearn", coffee: "viewCoffee", hsi: "viewHsi", methods: "viewMethods", scan: "viewScan" };
+  const NAVKEY = { home: "home", learn: "learn", coffee: "learn", hsi: "learn", methods: "learn", scan: "scan" };
+  const TITLES = { home: "Coffee Adulterant Detector", learn: "Learn · Coffee Adulterant Detector",
+                   coffee: "Coffee and what gets mixed into it", hsi: "Seeing chemistry with HSI", methods: "How adulteration is detected",
+                   scan: "Scan a sample · Coffee Adulterant Detector" };
+  const menuBtn = $("menuBtn"), navMenu = $("navMenu");
+  const closeMenu = () => { document.body.classList.remove("menu-open"); menuBtn.setAttribute("aria-expanded", "false"); };
+  menuBtn.addEventListener("click", () => { const o = document.body.classList.toggle("menu-open"); menuBtn.setAttribute("aria-expanded", String(o)); });
+  function route() {
+    const h = (location.hash || "#home").slice(1), v = h in ROUTES ? h : "home";
+    for (const [k, id] of Object.entries(ROUTES)) $(id).hidden = k !== v;
+    document.body.dataset.view = v; document.title = TITLES[v];
+    document.querySelectorAll("[data-nav]").forEach((x) => { if (x.dataset.nav === NAVKEY[v]) x.setAttribute("aria-current", "page"); else x.removeAttribute("aria-current"); });
+    closeMenu();
+    if (v === "home") { fitWordmark(); bean.start(); } else bean.stop();
+    for (const [k, w] of Object.entries(WIRES)) { if (k === v) w.start(); else w.stop(); }
+    fitWords();
+    if (v === "coffee") drawLegal();
+    if (v === "hsi") drawLearnChart();
+    if (v === "learn") drawCovers();
+    if (v === "scan") { drawScan(); if (S && S.selected !== null && !$("resultCard").hidden) renderResult(S.selected); }
+    readProgress();
+  }
+  window.addEventListener("hashchange", () => { route(); window.scrollTo(0, 0); });
+
+  // ---------------------------------------------------------------- reading progress on article pages
+  const readbar = $("readbar");
+  function readProgress() {
+    const v = document.body.dataset.view;
+    if (!["coffee", "hsi", "methods"].includes(v)) { readbar.style.width = "0"; return; }
+    const max = document.documentElement.scrollHeight - innerHeight;
+    readbar.style.width = `${max > 0 ? Math.min(100, (scrollY / max) * 100) : 100}%`;
+  }
+  addEventListener("scroll", readProgress, { passive: true });
+
+  // ---------------------------------------------------------------- home: giant wordmark sized to the width
+  function fitWordmark() {
+    const el = $("wordmark"); if (!el || $("viewHome").hidden) return;
+    el.style.fontSize = "100px";
+    const w = el.scrollWidth, avail = el.parentElement.clientWidth * 0.985;
+    el.style.fontSize = `${(100 * avail) / w}px`;
+    bean.redraw();
+  }
+  addEventListener("resize", fitWordmark);
+  document.fonts && document.fonts.ready.then(fitWordmark);
+
+  // ---------------------------------------------------------------- home: wireframe coffee bean swept by a push-broom scan line
+  // The readout cycles through the app's real outputs on three scanned dishes (training_dish_predictions.csv).
+  const DEMO = [["ROBUSTA + CHICORY", "30.9", "30"], ["ARABICA + CHICORY", "24.8", "25"], ["ARABICA + ROBUSTA + CHICORY", "44.5", "45"]];
+  function beanMesh(NU, NV) {                          // ellipsoid with a flat face and an S-shaped crease
+    const P = [], GROOVE = [], A = 0.74, B = 0.56;
+    for (let i = 0; i <= NU; i++) {
+      const u = (i / NU) * Math.PI, row = [];
+      for (let j = 0; j < NV; j++) {
+        const v = (j / NV) * 2 * Math.PI, s = Math.sin(u);
+        let x = A * s * Math.cos(v), y = B * s * Math.sin(v);
+        const z = Math.cos(u) * 1.02;
+        if (y > 0) {
+          y *= 0.5;
+          const cx = 0.16 * Math.sin(2 * u) * A, w = 0.12 * A;
+          y -= 0.17 * s * Math.exp(-((x - cx) ** 2) / (w * w));
+        }
+        const wob = 1 + 0.03 * Math.sin(3 * v + 2 * u) + 0.025 * Math.sin(5 * u + v);
+        row.push([x * wob, y * wob, z * wob]);
+      }
+      P.push(row);
+    }
+    for (let i = 0; i <= 40; i++) {                    // the bottom of the crease, drawn as a bold centre line
+      const u = Math.PI * (0.09 + 0.82 * i / 40), s = Math.sin(u), cx = 0.16 * Math.sin(2 * u) * A;
+      const r = Math.min(0.99, Math.abs(cx / (A * s)));
+      GROOVE.push([cx, 0.5 * B * s * Math.sqrt(1 - r * r) - 0.17 * s, Math.cos(u) * 1.02]);
+    }
+    return { P, GROOVE };
+  }
+  const bean = (() => {
+    const cv = $("beanCanvas"), ctx = cv.getContext("2d");
+    const NU = 46, NV = 52, { P, GROOVE } = beanMesh(NU, NV);
+    let clock = 0, tx = 0, ty = 0, mx = 0, my = 0, raf = 0, running = false, last = 0, phase = 0, demo = 0, box = null;
+    const SWEEP = 3800, HOLD = 3000, CYCLE = SWEEP + HOLD;
+    const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduce) phase = SWEEP + 1;                          // still frame: fully scanned, readout showing
+    addEventListener("pointermove", (e) => { mx = (e.clientX / innerWidth - 0.5); my = (e.clientY / innerHeight - 0.5); }, { passive: true });
+    function frame(t) {
+      const dt = last ? Math.min(50, t - last) : 16; last = t;
+      clock += dt; phase += dt;
+      if (phase >= CYCLE) { phase -= CYCLE; demo = (demo + 1) % DEMO.length; }
+      tx += (mx * 0.5 - tx) * 0.05; ty += (my * 0.4 - ty) * 0.05;
+      draw();
+      if (running && !reduce) raf = requestAnimationFrame(frame);
+    }
+    function draw() {
+      const dpr = devicePixelRatio || 1, W = cv.clientWidth, H = cv.clientHeight;
+      if (!W) return;
+      if (cv.width !== Math.round(W * dpr) || cv.height !== Math.round(H * dpr)) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); box = null; }
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
+      // face-on to the crease, rocking gently so the S-groove stays in view
+      const roll = 0.5 * Math.sin(clock * 0.00045), turn = 0.3 * Math.sin(clock * 0.00029 + 1);
+      const cr = Math.cos(roll), sr = Math.sin(roll), ax = -1.15 + ty, ay = turn + tx, az = 0.6;
+      const cax = Math.cos(ax), sax = Math.sin(ax), cay = Math.cos(ay), say = Math.sin(ay), caz = Math.cos(az), saz = Math.sin(az);
+      const sc = Math.min(W * 0.36, (H - 130) / 2.6), ox = W / 2, oy = H / 2 - 18;
+      const project = (x, y, z) => {
+        const xa = x * cr - y * sr, ya = x * sr + y * cr;                  // roll about the bean's long axis
+        const yb = ya * cax - z * sax, zb = ya * sax + z * cax;            // tilt towards the viewer
+        const xc = xa * cay + zb * say, zc = -xa * say + zb * cay;         // turn
+        const xd = xc * caz - yb * saz, yd = xc * saz + yb * caz;          // lean on the page
+        const f = 3.4 / (3.4 + zc);
+        return [ox + xd * f * sc, oy + yd * f * sc, zc];
+      };
+      let x0 = 1e9, x1_ = -1e9, y0 = 1e9, y1_ = -1e9;
+      const Q = P.map((row) => row.map(([x, y, z]) => {
+        const q = project(x, y, z), X = q[0], Y = q[1];
+        if (X < x0) x0 = X; if (X > x1_) x1_ = X; if (Y < y0) y0 = Y; if (Y > y1_) y1_ = Y;
+        return q;
+      }));
+      const k = box ? 0.08 : 1;                                             // ease the frame so it does not jitter as the bean rolls
+      box = box ? box.map((v, i) => v + ([x0, y0, x1_, y1_][i] - v) * k) : [x0, y0, x1_, y1_];
+      const [bx0, by0, bx1, by1] = box, pad = 16;
+      const scanning = phase < SWEEP, s = scanning ? phase / SWEEP : 1;
+      const ease = s < 0.5 ? 2 * s * s : 1 - (-2 * s + 2) ** 2 / 2;
+      const lineY = by0 - pad + ease * (by1 - by0 + 2 * pad);
+      const paths = { back: new Path2D(), front: new Path2D(), backS: new Path2D(), frontS: new Path2D(), hot: new Path2D() };
+      const seg = (a, b) => {
+        const my_ = (a[1] + b[1]) / 2, isBack = a[2] + b[2] > 0;
+        const p = scanning && Math.abs(my_ - lineY) < 9 && !isBack ? paths.hot
+                : (scanning ? my_ < lineY : true) ? (isBack ? paths.backS : paths.frontS) : (isBack ? paths.back : paths.front);
+        p.moveTo(a[0], a[1]); p.lineTo(b[0], b[1]);
+      };
+      for (let i = 0; i <= NU; i++) for (let j = 0; j < NV; j++) {
+        const a = Q[i][j], r = Q[i][(j + 1) % NV];
+        if (i > 0 && i < NU) seg(a, r);
+        if (i < NU) { seg(a, Q[i + 1][j]); if (i % 2 === 0) seg(a, Q[i + 1][(j + 1) % NV]); }
+      }
+      const acc = css("--accent"), ink = css("--ink"), roast = css("--coffee-2"), mut = css("--muted");
+      const st = (p, col, a, w) => { ctx.strokeStyle = col; ctx.globalAlpha = a; ctx.lineWidth = w; ctx.stroke(p); };
+      st(paths.back, acc, 0.22, 0.6); st(paths.front, acc, 0.85, 0.75);       // not yet scanned: roast-orange wireframe
+      st(paths.backS, roast, 0.16, 0.6); st(paths.frontS, ink, 0.62, 0.7);    // scanned: espresso
+      st(paths.hot, acc, 1, 1.6);
+      ctx.globalAlpha = 1; ctx.lineCap = "round";                       // the S-shaped centre cut, drawn bold so it reads as a coffee bean
+      const G = GROOVE.map(([x, y, z]) => project(x, y, z));
+      for (let i = 1; i < G.length; i++) {
+        const a = G[i - 1], b = G[i], done = !scanning || (a[1] + b[1]) / 2 < lineY;
+        ctx.strokeStyle = done ? ink : acc; ctx.lineWidth = 2.4; ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+      if (scanning) {                                                         // the illuminated line under the camera
+        const lx0 = bx0 - pad - 26, lx1 = bx1 + pad + 26, g = ctx.createLinearGradient(0, lineY - 34, 0, lineY);
+        g.addColorStop(0, acc + "00"); g.addColorStop(1, acc);
+        ctx.globalAlpha = 0.14; ctx.fillStyle = g; ctx.fillRect(lx0, lineY - 34, lx1 - lx0, 34);
+        ctx.globalAlpha = 1; ctx.fillStyle = acc; ctx.fillRect(lx0, lineY - 0.75, lx1 - lx0, 1.5);
+      }
+      ctx.fillStyle = ink;                                                    // selection handles around the dish
+      for (const [hx, hy] of [[bx0 - pad, by0 - pad], [bx1 + pad, by0 - pad], [bx0 - pad, by1 + pad], [bx1 + pad, by1 + pad]]) ctx.fillRect(hx - 4, hy - 4, 8, 8);
+      const fs = Math.max(10.5, Math.min(13, W / 46));
+      const text = (str, x, y, size, weight, col, wide) => {
+        ctx.font = `${weight} ${size}px Archivo, "Helvetica Neue", Arial, sans-serif`;
+        if ("fontStretch" in ctx) ctx.fontStretch = wide ? "expanded" : "normal";
+        if ("letterSpacing" in ctx) ctx.letterSpacing = wide ? "0.06em" : "0px";
+        const w = ctx.measureText(str).width, X = Math.max(4, Math.min(W - w - 4, x));
+        ctx.fillStyle = col; ctx.fillText(str, X, y); return w;
+      };
+      ctx.textBaseline = "alphabetic";
+      text(scanning ? `SCANNING  ${Math.round(s * 100)} %` : "SCAN COMPLETE", bx0 - pad - 4, by0 - pad - 14 - fs * 1.45, fs, 700, ink, true);
+      text("SWIR · 1000–2450 nm · 288 bands", bx0 - pad - 4, by0 - pad - 12, fs, 500, mut, false);
+      if (!scanning) {
+        const [type, val, lab] = DEMO[demo], y = by1 + pad + 18 + fs, fade = reduce ? 1 : Math.min(1, (phase - SWEEP) / 350);
+        ctx.globalAlpha = fade;
+        text(type, bx0 - pad - 4, y, fs, 700, ink, true);
+        const w = text(`chicory ${val} %`, bx0 - pad - 4, y + fs * 2.3, fs * 1.9, 750, acc, false);
+        text(`dish labelled ${lab} %`, bx0 - pad - 4 + w + 12, y + fs * 2.3, fs, 500, mut, false);
+        ctx.globalAlpha = 1;
+      }
+    }
+    return { start() { if (!running) { running = true; last = 0; raf = requestAnimationFrame(frame); } },
+             stop() { running = false; cancelAnimationFrame(raf); }, redraw: draw };
+  })();
+  addEventListener("resize", () => bean.redraw());
+
+
+  // ---------------------------------------------------------------- inner pages: a small wireframe object per page, swept once by the scan line
+  // Segments flagged "true" stay roast-orange after the sweep, like chicory showing up on the app's map.
+  const REDUCE = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function gridSegs(P) {
+    const pts = [], segs = [], NV = P[0].length, NU = P.length - 1, id = (i, j) => i * NV + j;
+    P.forEach((row) => row.forEach((q) => pts.push(q)));
+    for (let i = 0; i <= NU; i++) for (let j = 0; j < NV; j++) {
+      if (i > 0 && i < NU) segs.push([id(i, j), id(i, (j + 1) % NV)]);
+      if (i < NU) { segs.push([id(i, j), id(i + 1, j)]); if (i % 2 === 0) segs.push([id(i, j), id(i + 1, (j + 1) % NV)]); }
+    }
+    return { pts, segs };
+  }
+  const MODELS = {
+    bean(mixed) {
+      const { P, GROOVE } = beanMesh(30, 34), m = gridSegs(P);
+      for (const sg of m.segs) { const q = m.pts[sg[0]]; sg.push(mixed && Math.sin(4.1 * q[0] + 2 * q[1] + 0.7) * Math.cos(3.3 * q[2] + 1) > 0.42); }
+      const g0 = m.pts.length; GROOVE.forEach((q) => m.pts.push(q));
+      m.bold = GROOVE.slice(1).map((_, i) => [g0 + i, g0 + i + 1]);
+      return m;
+    },
+    dish() {                                           // a petri dish of powder with a few chicory-rich patches
+      const pts = [], segs = [], bold = [], add = (q) => pts.push(q) - 1;
+      const spot = (q) => Math.sin(3.1 * q[0] + 1.3) * Math.cos(2.7 * q[2] - 0.4) > 0.45;
+      const ring = (r, y, n, isBold) => {
+        const ids = [];
+        for (let j = 0; j < n; j++) { const a = (2 * Math.PI * j) / n; ids.push(add([r * Math.cos(a), y, r * Math.sin(a)])); }
+        for (let j = 0; j < n; j++) { const sg = [ids[j], ids[(j + 1) % n]]; if (isBold) bold.push(sg); else segs.push([...sg, r < 0.97 && spot(pts[ids[j]])]); }
+        return ids;
+      };
+      const top = ring(1, -0.14, 72, true), bot = ring(1, 0.14, 72, false);
+      for (let j = 0; j < 72; j += 4) segs.push([top[j], bot[j], false]);
+      const rings = [];
+      for (let r = 0.12; r < 0.95; r += 0.118) rings.push(ring(r, 0.02, 48, false));
+      for (let j = 0; j < 48; j += 2) for (let q = 0; q < rings.length - 1; q++) segs.push([rings[q][j], rings[q + 1][j], spot(pts[rings[q][j]])]);
+      return { pts, segs, bold };
+    },
+  };
+  function wire(id, model, o) {
+    const cv = $(id), ctx = cv.getContext("2d");
+    let clock = 0, last = 0, raf = 0, running = false, phase = 0;
+    const SWEEP = o.sweep || 2200, HOLD = o.hold || 0;
+    function frame(t) {
+      const dt = last ? Math.min(50, t - last) : 16; last = t; clock += dt; phase += dt;
+      if (o.loop && phase > SWEEP + HOLD) phase = 0;
+      draw();
+      if (running && !REDUCE) raf = requestAnimationFrame(frame);
+    }
+    function draw() {
+      const dpr = devicePixelRatio || 1, W = cv.clientWidth, H = cv.clientHeight;
+      if (!W || !H) return;
+      if (cv.width !== Math.round(W * dpr) || cv.height !== Math.round(H * dpr)) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); }
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
+      const sp = (o.spin0 || 0) + clock * (o.spin || 0), rk = (o.rock || 0) * Math.sin(clock * 0.00045);
+      const c1 = Math.cos(sp), s1 = Math.sin(sp), c2 = Math.cos(rk), s2 = Math.sin(rk);
+      const c3 = Math.cos(o.ax), s3 = Math.sin(o.ax), c4 = Math.cos(o.az || 0), s4 = Math.sin(o.az || 0);
+      const sc = Math.min(W, H) * o.scale, ox = W / 2, oy = H / 2;
+      let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
+      const Q = model.pts.map(([x, y, z]) => {
+        const xa = x * c1 + z * s1, za = -x * s1 + z * c1;              // turntable spin about the object's own axis
+        const xb = xa * c2 - y * s2, yb = xa * s2 + y * c2;              // gentle rock
+        const yc = yb * c3 - za * s3, zc = yb * s3 + za * c3;            // tilt towards the viewer
+        const xd = xb * c4 - yc * s4, yd = xb * s4 + yc * c4;            // lean on the page
+        const f = 3.6 / (3.6 + zc), X = ox + xd * f * sc, Y = oy + yd * f * sc;
+        if (X < x0) x0 = X; if (X > x1) x1 = X; if (Y < y0) y0 = Y; if (Y > y1) y1 = Y;
+        return [X, Y, zc];
+      });
+      const pad = 12, scanning = !REDUCE && phase < SWEEP, s = scanning ? phase / SWEEP : 1;
+      const e = s < 0.5 ? 2 * s * s : 1 - (-2 * s + 2) ** 2 / 2, lineY = y0 - pad + e * (y1 - y0 + 2 * pad);
+      const acc = css("--accent"), ink = css("--ink"), roast = css("--coffee-2");
+      const P = { uB: new Path2D(), uF: new Path2D(), sB: new Path2D(), sF: new Path2D(), fB: new Path2D(), fF: new Path2D(), hot: new Path2D() };
+      for (const [a, b, fl] of model.segs) {
+        const A = Q[a], B = Q[b], my = (A[1] + B[1]) / 2, back = A[2] + B[2] > 0, done = !scanning || my < lineY;
+        const k = scanning && !back && Math.abs(my - lineY) < 7 ? "hot" : !done ? (back ? "uB" : "uF") : fl ? (back ? "fB" : "fF") : (back ? "sB" : "sF");
+        P[k].moveTo(A[0], A[1]); P[k].lineTo(B[0], B[1]);
+      }
+      const st = (path, col, al, w) => { ctx.strokeStyle = col; ctx.globalAlpha = al; ctx.lineWidth = w; ctx.stroke(path); };
+      st(P.uB, acc, 0.2, 0.6); st(P.uF, acc, 0.8, 0.75); st(P.sB, roast, 0.14, 0.6); st(P.sF, ink, 0.58, 0.7);
+      st(P.fB, acc, 0.3, 0.7); st(P.fF, acc, 1, 1.3); st(P.hot, acc, 1, 1.6);
+      ctx.lineCap = "round";
+      for (const [a, b] of model.bold || []) {
+        const A = Q[a], B = Q[b], done = !scanning || (A[1] + B[1]) / 2 < lineY;
+        ctx.strokeStyle = done ? ink : acc; ctx.globalAlpha = A[2] + B[2] > 0 ? 0.3 : 1; ctx.lineWidth = o.boldW || 1.8;
+        ctx.beginPath(); ctx.moveTo(A[0], A[1]); ctx.lineTo(B[0], B[1]); ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+      if (scanning) {
+        const lx0 = x0 - pad - 18, lx1 = x1 + pad + 18, g = ctx.createLinearGradient(0, lineY - 28, 0, lineY);
+        g.addColorStop(0, acc + "00"); g.addColorStop(1, acc);
+        ctx.globalAlpha = 0.14; ctx.fillStyle = g; ctx.fillRect(lx0, lineY - 28, lx1 - lx0, 28);
+        ctx.globalAlpha = 1; ctx.fillStyle = acc; ctx.fillRect(lx0, lineY - 0.75, lx1 - lx0, 1.5);
+      }
+      ctx.fillStyle = ink;
+      for (const [hx, hy] of [[x0 - pad, y0 - pad], [x1 + pad, y0 - pad], [x0 - pad, y1 + pad], [x1 + pad, y1 + pad]]) ctx.fillRect(hx - 3.5, hy - 3.5, 7, 7);
+    }
+    return { start() { if (running) return; running = true; phase = 0; last = 0; raf = requestAnimationFrame(frame); },
+             stop() { running = false; cancelAnimationFrame(raf); }, redraw: draw };
+  }
+
+  // ---------------------------------------------------------------- HSI article head: the three measured spectra drawn by a moving wavelength cursor
+  function spectraDraw(id) {
+    const cv = $(id), ctx = cv.getContext("2d");
+    const SER = [["Arabica", "AB100", "--s-arabica"], ["Robusta", "RB100", "--s-robusta"], ["Chicory", "CH100", "--s-chicory"]];
+    const IDX = WL.map((w, i) => [w, i]).filter(([w]) => w >= 1000 && w <= 2450);
+    let lo = Infinity, hi = -Infinity;
+    for (const [, k] of SER) for (const [, i] of IDX) { lo = Math.min(lo, REF[k][i]); hi = Math.max(hi, REF[k][i]); }
+    const pad = (hi - lo) * 0.06; lo -= pad; hi += pad;
+    const DRAW = 2800, HOLD = 5200;
+    let last = 0, raf = 0, running = false, phase = 0;
+    function frame(t) {
+      const dt = last ? Math.min(50, t - last) : 16; last = t; phase += dt;
+      if (phase > DRAW + HOLD) phase = 0;
+      draw();
+      if (running && !REDUCE) raf = requestAnimationFrame(frame);
+    }
+    function draw() {
+      const dpr = devicePixelRatio || 1, W = cv.clientWidth, H = cv.clientHeight;
+      if (!W || !H) return;
+      if (cv.width !== Math.round(W * dpr) || cv.height !== Math.round(H * dpr)) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); }
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
+      const ink = css("--ink"), mut = css("--muted"), acc = css("--accent"), line = css("--line");
+      const x0 = 14, x1 = W - 74, y0 = 42, y1 = H - 30;
+      const X = (w) => x0 + ((w - 1000) / 1450) * (x1 - x0), Y = (v) => y1 - ((v - lo) / (hi - lo)) * (y1 - y0);
+      const s = REDUCE ? 1 : Math.min(1, phase / DRAW), e = s < 0.5 ? 2 * s * s : 1 - (-2 * s + 2) ** 2 / 2, wCut = 1000 + e * 1450;
+      const after = REDUCE ? 1 : Math.max(0, Math.min(1, (phase - DRAW) / 500));
+      ctx.font = `500 10.5px Archivo, "Helvetica Neue", Arial, sans-serif`;
+      if ("letterSpacing" in ctx) ctx.letterSpacing = "0px";
+      ctx.strokeStyle = line; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x0, y1 + 0.5); ctx.lineTo(x1, y1 + 0.5); ctx.stroke();
+      ctx.fillStyle = mut; ctx.textBaseline = "top";
+      for (const w of [1000, 1500, 2000]) { ctx.fillRect(X(w), y1, 1, 4); ctx.fillText(String(w), X(w) - (w === 1000 ? 0 : 11), y1 + 7); }
+      ctx.fillText("nm", X(2450) - 12, y1 + 7);
+      if (after > 0) {                                   // the two coffee-oil bands, where chicory dips least
+        ctx.globalAlpha = after; ctx.setLineDash([3, 4]); ctx.strokeStyle = mut;
+        for (const w of [1730, 2310]) { ctx.beginPath(); ctx.moveTo(X(w) + 0.5, y0 - 6); ctx.lineTo(X(w) + 0.5, y1); ctx.stroke(); }
+        ctx.setLineDash([]); ctx.textBaseline = "bottom"; ctx.fillStyle = mut;
+        ctx.fillText("oil", X(1730) - 7, y0 - 8); ctx.fillText("oil", X(2310) - 7, y0 - 8);
+        ctx.globalAlpha = 1;
+      }
+      const ends = [];
+      ctx.lineJoin = "round"; ctx.lineCap = "round";
+      for (const [name, k, tok] of SER) {
+        const col = css(tok); let px = 0, py = 0, prev = null;
+        ctx.strokeStyle = col; ctx.lineWidth = 1.9; ctx.beginPath();
+        for (const [w, i] of IDX) {
+          let ww = w, v = REF[k][i];
+          if (w > wCut) { if (!prev) break; const f = (wCut - prev[0]) / (w - prev[0]); ww = wCut; v = prev[1] + f * (v - prev[1]); }
+          px = X(ww); py = Y(v);
+          if (!prev) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+          prev = [w, REF[k][i]];
+          if (w > wCut) break;
+        }
+        ctx.stroke();
+        if (s < 1) { ctx.fillStyle = col; ctx.beginPath(); ctx.arc(px, py, 3.2, 0, 2 * Math.PI); ctx.fill(); }
+        ends.push([name, col, py]);
+      }
+      if (s < 1) {                                       // the wavelength cursor, like the scan line on the home page
+        const cx = X(wCut), g = ctx.createLinearGradient(cx - 30, 0, cx, 0);
+        g.addColorStop(0, acc + "00"); g.addColorStop(1, acc);
+        ctx.globalAlpha = 0.13; ctx.fillStyle = g; ctx.fillRect(cx - 30, y0 - 10, 30, y1 - y0 + 10);
+        ctx.globalAlpha = 1; ctx.fillStyle = acc; ctx.fillRect(cx - 0.75, y0 - 10, 1.5, y1 - y0 + 10);
+        ctx.font = `700 10.5px Archivo, "Helvetica Neue", Arial, sans-serif`; ctx.textBaseline = "bottom"; ctx.fillStyle = ink;
+        const lab = `λ ${Math.round(wCut)} nm`, lw = ctx.measureText(lab).width;
+        ctx.fillText(lab, Math.min(W - lw - 2, Math.max(0, cx - lw / 2)), y0 - 12);
+      } else {                                           // names at the line ends, nudged apart so they never overlap
+        ends.sort((a, b) => a[2] - b[2]);
+        for (let i = 1; i < ends.length; i++) if (ends[i][2] - ends[i - 1][2] < 14) ends[i][2] = ends[i - 1][2] + 14;
+        ctx.font = `600 11.5px Archivo, "Helvetica Neue", Arial, sans-serif`; ctx.textBaseline = "middle";
+        for (const [name, col, y] of ends) { ctx.fillStyle = col; ctx.fillText(name, x1 + 8, y); }
+      }
+      ctx.fillStyle = ink;
+      for (const [hx, hy] of [[x0 - 8, 9], [W - 6, 9], [x0 - 8, y1 + 22], [W - 6, y1 + 22]]) ctx.fillRect(hx - 3.5, hy - 3.5, 7, 7);
+    }
+    return { start() { if (running) return; running = true; phase = 0; last = 0; raf = requestAnimationFrame(frame); },
+             stop() { running = false; cancelAnimationFrame(raf); }, redraw: draw };
+  }
+  const WIRES = {
+    learn: wire("wireLearn", MODELS.bean(false), { ax: -1.15, az: 0.6, rock: 0.5, scale: 0.34, boldW: 2.2 }),
+    coffee: wire("wireCoffee", MODELS.bean(true), { ax: -1.15, az: -0.55, rock: 0.5, scale: 0.34, boldW: 2.2 }),
+    hsi: spectraDraw("wireHsi"),
+    methods: wire("wireMethods", MODELS.dish(), { ax: 0.95, spin: 0.00018, scale: 0.41 }),
+    scan: wire("wireScan", MODELS.dish(), { ax: 0.95, spin: 0.00018, scale: 0.41, loop: true, sweep: 2600, hold: 1800 }),
+  };
+
+  // ---------------------------------------------------------------- inner pages: giant wordmark sized to the width
+  function fitWords() {
+    document.querySelectorAll(".view:not([hidden]) .pw").forEach((el) => {
+      el.style.fontSize = "100px";
+      const box = el.parentElement, cs = getComputedStyle(box);
+      const avail = (box.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight)) * 0.99;
+      el.style.fontSize = `${Math.min(innerHeight * (parseFloat(el.dataset.cap) || 0.3), (100 * avail) / el.offsetWidth)}px`;
+    });
+  }
+  addEventListener("resize", () => { fitWords(); for (const w of Object.values(WIRES)) w.redraw(); });
+  document.fonts && document.fonts.ready.then(fitWords);
+
+  // ---------------------------------------------------------------- article pages: contents rail, section in view highlighted
+  document.querySelectorAll(".abody").forEach((ab) => {
+    const list = ab.querySelector(".toc"), items = [];
+    for (const b of ab.querySelector(".amain").children) {
+      if (b.classList.contains("art-end")) continue;
+      const label = b.dataset.toc || (b.querySelector("h3") && b.querySelector("h3").textContent.trim());
+      if (!label) continue;
+      const li = document.createElement("li"), btn = document.createElement("button");
+      btn.type = "button"; btn.textContent = label;
+      btn.addEventListener("click", () => b.scrollIntoView({ behavior: REDUCE ? "auto" : "smooth", block: "start" }));
+      li.append(btn); list.append(li); items.push([b, btn]);
+    }
+    const io = new IntersectionObserver((ents) => ents.forEach((en) => {
+      if (en.isIntersecting) items.forEach(([b, btn]) => btn.setAttribute("aria-current", String(b === en.target)));
+    }), { rootMargin: "-22% 0px -68% 0px" });
+    items.forEach(([b]) => io.observe(b));
+  });
+
+  // ---------------------------------------------------------------- learn: cover art (drawn from real data)
+  let coversDone = false;
+  function drawCovers() {
+    if (coversDone) return; coversDone = true;
+    // 01: beans on espresso, one row of chicory roots
+    let s1 = `<rect width="400" height="320" fill="#2a1a12"/>`;
+    let seed = 3; const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+    for (let r = 0; r < 6; r++) for (let c = 0; c < 8; c++) {
+      const x = 28 + c * 50 + (r % 2) * 25, y = 26 + r * 54, rot = Math.round(rnd() * 360);
+      const chic = r === 3 && c % 2 === 0;
+      s1 += chic ? `<g transform="translate(${x} ${y}) rotate(${rot})"><path d="M0 -18 C 7 -8, 6 6, 0 18 C -6 6, -7 -8, 0 -18 Z" fill="#e8571f"/><path d="M0 -12 V12" stroke="#2a1a12" stroke-width="1.6"/></g>`
+                 : `<g transform="translate(${x} ${y}) rotate(${rot})"><ellipse rx="13" ry="18" fill="${rnd() < 0.5 ? "#8a5a36" : "#6b4423"}"/><path d="M-3 -15 C 6 -5, -6 5, 3 15" stroke="#f3e2cf" stroke-width="1.8" fill="none" opacity=".8"/></g>`;
+    }
+    // 02: stacked spectra of pure arabica, robusta and chicory, offset like a waterfall
+    let s2 = `<defs><linearGradient id="g2" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#1a110c"/><stop offset="1" stop-color="#3a1d12"/></linearGradient></defs><rect width="400" height="320" fill="url(#g2)"/>`;
+    const sets = [REF.AB100, REF.RB100, REF.CH100];
+    for (let k = 0; k < 14; k++) {
+      const v = sets[k % 3], pts = [];
+      const sel = WL.map((w, i) => [w, v[i]]).filter(([w]) => w >= 1000 && w <= 2450);
+      const lo = Math.min(...sel.map((p) => p[1])), hi = Math.max(...sel.map((p) => p[1]));
+      for (const [w, r] of sel) pts.push(`${(24 + ((w - 1000) / 1450) * 352).toFixed(1)},${(70 + k * 15 - ((r - lo) / (hi - lo)) * 46).toFixed(1)}`);
+      const col = k % 3 === 2 ? "#e8571f" : `rgba(255,255,255,${(0.35 + 0.04 * k).toFixed(2)})`;
+      s2 += `<polyline points="${pts.join(" ")}" fill="none" stroke="${col}" stroke-width="${k % 3 === 2 ? 1.6 : 1}"/>`;
+    }
+    // 03: a sheet of instrument glyphs
+    const ink = "#111114";
+    const g = [
+      `<circle cx="0" cy="-6" r="14" fill="none" stroke="${ink}" stroke-width="3"/><path d="M10 4 L22 16" stroke="${ink}" stroke-width="4" stroke-linecap="round"/>`,
+      `<path d="M-24 14 H24 M-20 14 C -16 14, -14 -14, -10 14 M -2 14 C 1 14, 3 -4, 6 14 M 10 14 C 13 14, 15 -18, 18 14" fill="none" stroke="${ink}" stroke-width="2.6"/>`,
+      `<path d="M-10 -20 C 10 -10, -10 10, 10 20 M10 -20 C -10 -10, 10 10, -10 20 M-6 -12 H6 M-6 0 H6 M-6 12 H6" fill="none" stroke="${ink}" stroke-width="2.6"/>`,
+      `<path d="M-24 16 H24 M-22 16 C -10 16, -4 -22, 0 -22 C 4 -22, 10 16, 22 16" fill="none" stroke="${ink}" stroke-width="2.6"/>`,
+      `<rect x="-20" y="-14" width="40" height="28" rx="3" fill="none" stroke="${ink}" stroke-width="2.6"/><circle r="7" fill="none" stroke="${ink}" stroke-width="2.6"/>`,
+      `<path d="M-14 -14 h28 v28 h-28 Z M-8 -20 h28 v28 M-2 -26 h28 v28" fill="none" stroke="#e8571f" stroke-width="2.6"/>`,
+    ];
+    let s3 = `<rect width="400" height="320" fill="#f2efe9"/>`;
+    g.forEach((d, i) => { const x = 80 + (i % 3) * 120, y = 100 + Math.floor(i / 3) * 120;
+      s3 += `<rect x="${x - 46}" y="${y - 46}" width="92" height="92" fill="none" stroke="#d9d4cc"/><g transform="translate(${x} ${y})">${d}</g>`; });
+    const svg = (inner, label) => `<svg viewBox="0 0 400 320" preserveAspectRatio="xMidYMid slice" role="img" aria-label="${label}">${inner}</svg>`;
+    $("art1").innerHTML = svg(s1, "Coffee beans with a row of chicory roots");
+    $("art2").innerHTML = svg(s2, "Stacked spectra of arabica, robusta and chicory");
+    $("art3").innerHTML = svg(s3, "Glyphs for microscopy, chromatography, DNA, NMR, spectroscopy and hyperspectral imaging");
+  }
+  // ---------------------------------------------------------------- learn: legal scale
+  function drawLegal() {
+    const x0 = 30, x1 = 730, X = (p) => x0 + (p / 100) * (x1 - x0);
+    let g = `<rect x="${X(0)}" y="34" width="${X(49) - X(0)}" height="26" fill="var(--ok-bg)"/>
+             <rect x="${X(49)}" y="34" width="${X(100) - X(49)}" height="26" fill="var(--bad-bg)"/>
+             <line x1="${X(49)}" x2="${X(49)}" y1="26" y2="68" stroke="var(--bad)" stroke-width="2"/>
+             <text x="${X(24.5)}" y="51" text-anchor="middle" font-size="13" font-weight="700" fill="var(--ok)">allowed if declared on the pack</text>
+             <text x="${X(74.5)}" y="51" text-anchor="middle" font-size="13" font-weight="700" fill="var(--bad)">not allowed</text>
+             <text x="${X(49)}" y="18" text-anchor="middle" font-size="12" fill="var(--ink)">49 % limit</text>`;
+    for (let p = 0; p <= 100; p += 10) g += `<line x1="${X(p)}" x2="${X(p)}" y1="60" y2="66" stroke="var(--muted)"/><text x="${X(p)}" y="80" text-anchor="middle" font-size="11" fill="var(--muted)">${p}</text>`;
+    g += `<path d="M${X(0)} 92 v6 H${X(50)} v-6" fill="none" stroke="var(--coffee)" stroke-width="2"/>
+          <text x="${X(25)}" y="110" text-anchor="middle" font-size="12" fill="var(--coffee)">range the app is calibrated for (0–50 %)</text>
+          <text x="${X(100)}" y="106" text-anchor="end" font-size="11.5" fill="var(--muted)">chicory in the blend (%)</text>`;
+    $("legalSvg").innerHTML = g;
+  }
+
+  // ---------------------------------------------------------------- spectrum chart (shared)
+  function spectrumChart(svg, keyEl, tip, series, bands) {
+    const W = 640, H = 300, m = { l: 46, r: 92, t: 14, b: 38 }, x0 = 950, x1 = 2520;
+    const all = series.flatMap((s) => s.vals).filter(Number.isFinite);
+    const yMax = Math.ceil(Math.max(...all) * 10) / 10, yMin = Math.max(0, Math.floor(Math.min(...all) * 10) / 10);
+    const X = (w) => m.l + ((w - x0) / (x1 - x0)) * (W - m.l - m.r), Y = (v) => H - m.b - ((v - yMin) / (yMax - yMin)) * (H - m.t - m.b);
+    let g = "";
+    for (let v = yMin; v <= yMax + 1e-9; v += 0.1) g += `<line x1="${m.l}" x2="${W - m.r}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)" stroke-width="1"/>
+      <text x="${m.l - 8}" y="${Y(v) + 4}" text-anchor="end" font-size="11" fill="var(--muted)">${v.toFixed(1)}</text>`;
+    for (let w = 1000; w <= 2500; w += 250) g += `<text x="${X(w)}" y="${H - m.b + 16}" text-anchor="middle" font-size="11" fill="var(--muted)">${w}</text>`;
+    bands.forEach(([w, t], i) => {
+      g += `<line x1="${X(w)}" x2="${X(w)}" y1="${m.t}" y2="${H - m.b}" stroke="var(--muted)" stroke-dasharray="2 4" stroke-width="1"/>
+            <text x="${X(w) + 4}" y="${m.t + 10 + (i % 3) * 12}" font-size="10.5" fill="var(--muted)">${t}</text>`;
+    });
+    g += `<text x="${(m.l + W - m.r) / 2}" y="${H - 6}" text-anchor="middle" font-size="11.5" fill="var(--muted)">wavelength (nm)</text>
+          <text transform="translate(12 ${(m.t + H - m.b) / 2}) rotate(-90)" text-anchor="middle" font-size="11.5" fill="var(--muted)">reflectance</text>`;
+    const labels = [];
+    for (const s of series.slice().reverse()) {
+      let d = "";
+      s.vals.forEach((v, k) => { if (WL[k] < x0 || WL[k] > x1 || !Number.isFinite(v)) return; d += `${d ? "L" : "M"}${X(WL[k]).toFixed(1)},${Y(v).toFixed(1)}`; });
+      g += `<path d="${d}" fill="none" stroke="${s.color}" stroke-width="${s.width}" stroke-linejoin="round"/>`;
+      const kEnd = WL.findIndex((w) => w > 2445); labels.push({ y: Y(s.vals[kEnd]), s });
+    }
+    labels.sort((a, b) => a.y - b.y); for (let k = 1; k < labels.length; k++) labels[k].y = Math.max(labels[k].y, labels[k - 1].y + 13);
+    for (const lb of labels) g += `<text x="${W - m.r + 6}" y="${lb.y + 4}" font-size="11" fill="var(--ink)">${lb.s.name}</text>`;
+    g += `<line class="cross" x1="0" x2="0" y1="${m.t}" y2="${H - m.b}" stroke="var(--muted)" stroke-width="1" visibility="hidden"/>
+          <rect class="hit" x="${m.l}" y="${m.t}" width="${W - m.l - m.r}" height="${H - m.t - m.b}" fill="transparent"/>`;
+    svg.innerHTML = g;
+    keyEl.innerHTML = series.map((s) => `<span><i style="border-color:${s.color};border-top-width:${s.width}px"></i>${s.name}</span>`).join("");
+    const hit = svg.querySelector(".hit"), cross = svg.querySelector(".cross");
+    hit.addEventListener("mousemove", (e) => {
+      const r = svg.getBoundingClientRect(), sx = W / r.width, px = (e.clientX - r.left) * sx;
+      const wl = x0 + ((px - m.l) / (W - m.l - m.r)) * (x1 - x0);
+      let k = 0; for (let j = 1; j < WL.length; j++) if (Math.abs(WL[j] - wl) < Math.abs(WL[k] - wl)) k = j;
+      cross.setAttribute("x1", X(WL[k])); cross.setAttribute("x2", X(WL[k])); cross.setAttribute("visibility", "visible");
+      tip.hidden = false;
+      tip.innerHTML = `<b>${WL[k].toFixed(0)} nm</b><br>` + series.map((s) => `<span style="color:${s.color}">■</span> ${s.name}: ${fmt(s.vals[k], 3)}`).join("<br>");
+      tip.style.left = `${Math.min(r.width - 190, (X(WL[k]) / sx) + 12)}px`; tip.style.top = "8px";
+    });
+    hit.addEventListener("mouseleave", () => { cross.setAttribute("visibility", "hidden"); tip.hidden = true; });
+  }
+  const pureSeries = () => [
+    { name: "Pure robusta", vals: REF.RB100, color: css("--s-robusta"), width: 1.8 },
+    { name: "Pure arabica", vals: REF.AB100, color: css("--s-arabica"), width: 1.8 },
+    { name: "Pure chicory", vals: REF.CH100, color: css("--s-chicory"), width: 1.8 },
+  ];
+  function drawLearnChart() {
+    spectrumChart($("learnSvg"), $("learnKey"), $("learnTip"), pureSeries(),
+                  [[1210, "C–H"], [1450, "water"], [1690, "caffeine"], [1730, "oil"], [1940, "water"], [2100, "carbs"], [2230, "N–H"], [2310, "oil"]]);
+  }
+
+  // ---------------------------------------------------------------- loading files
+  $("fileInput").addEventListener("change", (e) => { addFiles([...e.target.files]); e.target.value = ""; });
+  const drop = $("drop");
+  ["dragenter", "dragover"].forEach((t) => drop.addEventListener(t, (e) => { e.preventDefault(); drop.classList.add("over"); }));
+  ["dragleave", "drop"].forEach((t) => drop.addEventListener(t, (e) => { e.preventDefault(); drop.classList.remove("over"); }));
+  drop.addEventListener("drop", (e) => addFiles([...e.dataTransfer.files]));
+
+  function showSlots(h, d) {
+    const sh = $("slotHdr"), sd = $("slotData");
+    sh.textContent = h ? `.hdr: ${h.name}` : ".hdr: not added"; sh.classList.toggle("ok", !!h);
+    sd.textContent = d ? `data: ${d.name}` : ".hyspex / .img: not added"; sd.classList.toggle("ok", !!d);
+  }
+  function addFiles(files) {
+    showError("");
+    for (const f of files) { if (/\.hdr$/i.test(f.name)) pending.hdr = f; else pending.data = f; }
+    showSlots(pending.hdr, pending.data);
+    if (pending.hdr && pending.data) { const p = pending; pending = {}; openFiles(p.hdr, p.data); }
+    else if (pending.hdr) setStatus([`<b>${esc(pending.hdr.name)}</b> added. Now add its data file (.hyspex or .img).`]);
+    else if (pending.data) setStatus([`<b>${esc(pending.data.name)}</b> added. Now add its .hdr header file.`]);
+  }
+
+  async function openFiles(hdrFile, dataFile) {
+    showSlots(hdrFile, dataFile);
+    $("resultCard").hidden = true;
+    try {
+      const stem = (n) => n.replace(/\.[^.]+$/, "");
+      const src = { read: (a, b) => dataFile.slice(a, b).arrayBuffer() };
+      const scan = await CoffeeCore.openScan(await hdrFile.text(), src, dataFile.size, dataFile.name, models);
+      setStatus([`<b>${esc(dataFile.name)}</b>`, `<span class="num">${scan.L} lines × ${scan.S} px × ${scan.B} bands</span>`,
+                 scan.raw ? `raw camera counts (dark level <span class="num">${Math.round(scan.bgMedian)}</span>)` : "radiance file"]
+                .concat(stem(hdrFile.name) !== stem(dataFile.name) ? ["<b>Note:</b> the two file names differ; make sure they are the same scan"] : []));
+      setProgress(0, "Reading the scan…");
+      const br = await CoffeeCore.brightnessImage(scan, (p) => setProgress(p * 0.8, `Reading the scan… ${Math.round(p * 100)} %`));
+      const strip = CoffeeCore.findStrip(br, scan.L, scan.S);
+      setProgress(0.82, "Finding the dishes…");
+      await new Promise((r) => setTimeout(r, 20));
+      const dishes = CoffeeCore.findDishes(br, scan.L, scan.S, strip.s1);
+      if (!dishes.length) throw new Error("No petri dishes were found below the white strip. The app looks for round dishes about 15 cm across in the scan.");
+      setProgress(0.88, "Measuring the white reference…");
+      const white = await CoffeeCore.buildWhite(scan, strip, models.pipeline, (p) => setProgress(0.88 + 0.12 * p));
+      S = { scan, br, L: scan.L, Sx: scan.S, strip, dishes, white, results: dishes.map(() => null), selected: null };
+      S.image = grayImage(br, scan.L, scan.S); S.imgScale = 1;
+      setStatus([`<b>${esc(dataFile.name)}</b>`, `<span class="num">${scan.L} lines × ${scan.S} px × ${scan.B} bands</span>`,
+                 scan.raw ? `raw camera counts (dark level <span class="num">${Math.round(scan.bgMedian)}</span>)` : "radiance file",
+                 `${dishes.length} dish${dishes.length > 1 ? "es" : ""} found`]);
+      $("emptyState").hidden = true; $("scanCard").hidden = false;
+      setProgress(null, "Click a dish to analyse it.");
+      drawScan();
+      if (dishes.length === 1) selectDish(0);
+    } catch (err) {
+      setProgress(null, "Click a dish to analyse it."); showError(err.message || String(err)); console.error(err);
+    }
+  }
+
+  function grayImage(br, L, Sx) {
+    const sample = []; for (let k = 0; k < br.length; k += 37) sample.push(br[k]);
+    const lo = CoffeeCore.percentile(sample, 1), hi = CoffeeCore.percentile(sample, 99.5);
+    const c = document.createElement("canvas"); c.width = L; c.height = Sx;
+    const ctx = c.getContext("2d"), im = ctx.createImageData(L, Sx);
+    for (let l = 0; l < L; l++) for (let s = 0; s < Sx; s++) {
+      const v = br[l * Sx + s], g = Number.isFinite(v) ? Math.max(0, Math.min(255, Math.round(((v - lo) / (hi - lo)) * 255))) : 0, o = 4 * (s * L + l);
+      im.data[o] = im.data[o + 1] = im.data[o + 2] = g; im.data[o + 3] = 255;
+    }
+    ctx.putImageData(im, 0, 0); return c;
+  }
+
+  // ---------------------------------------------------------------- scan strip
+  const scanCanvas = $("scanCanvas");
+  function scanGeom() { const w = Math.max(720, scanCanvas.parentElement.clientWidth), k = w / S.L; return { w, h: Math.round(S.Sx * k), k }; }
+  function drawScan() {
+    if (!S || $("viewScan").hidden || $("scanCard").hidden) return;
+    const { w, h, k } = scanGeom(), dpr = window.devicePixelRatio || 1;
+    scanCanvas.width = Math.round(w * dpr); scanCanvas.height = Math.round(h * dpr); scanCanvas.style.height = `${h}px`;
+    const ctx = scanCanvas.getContext("2d");
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.imageSmoothingEnabled = true;
+    ctx.drawImage(S.image, 0, 0, w, h);
+    const gold = "#e0b872";
+    ctx.setLineDash([5, 4]); ctx.strokeStyle = "rgba(255,255,255,.75)"; ctx.lineWidth = 1.2;
+    ctx.strokeRect(S.strip.s0 * k, 2, (S.strip.s1 - S.strip.s0) * k, h - 4); ctx.setLineDash([]);
+    ctx.font = "700 12px Calibri, Carlito, sans-serif"; ctx.fillStyle = "#2a1a12"; ctx.textAlign = "center";
+    ctx.save(); ctx.translate(((S.strip.s0 + S.strip.s1) / 2) * k, h / 2); ctx.rotate(-Math.PI / 2); ctx.fillText("WHITE STRIP", 0, 4); ctx.restore();
+    S.dishes.forEach((d, i) => {
+      const x = d.cy * k, y = d.cx * k, r = (d.r - 6) * k, sel = i === S.selected, res = S.results[i];
+      ctx.beginPath(); ctx.arc(x, y, r, 0, 2 * Math.PI);
+      ctx.lineWidth = sel ? 3.5 : 1.8; ctx.strokeStyle = sel ? gold : "rgba(255,255,255,.85)"; ctx.stroke();
+      ctx.beginPath(); ctx.arc(x, y, 13, 0, 2 * Math.PI); ctx.fillStyle = sel ? gold : "rgba(42,26,18,.85)"; ctx.fill();
+      ctx.fillStyle = sel ? "#2a1a12" : "#fff"; ctx.font = "700 14px Calibri, Carlito, sans-serif"; ctx.textBaseline = "middle"; ctx.fillText(String(i + 1), x, y + 1);
+      if (res) {
+        const it = CoffeeCore.interpret(res, models);
+        const txt = it.detected ? `${fmt(Math.max(0, res.adulterant))} % ${it.adulterantName}` : (it.mixedBase ? "no chicory" : `pure ${it.baseName}`);
+        ctx.font = "700 12px Calibri, Carlito, sans-serif"; const tw = ctx.measureText(txt).width + 12;
+        const ty = Math.min(h - 12, y + r * 0.62);
+        ctx.fillStyle = "rgba(255,255,255,.93)"; ctx.fillRect(x - tw / 2, ty - 10, tw, 20);
+        ctx.fillStyle = "#2a1a12"; ctx.fillText(txt, x, ty + 1);
+      }
+      ctx.textBaseline = "alphabetic";
+    });
+  }
+  scanCanvas.addEventListener("click", (e) => {
+    if (!S) return;
+    const rect = scanCanvas.getBoundingClientRect(), { k } = scanGeom();
+    const line = (e.clientX - rect.left) / k, samp = (e.clientY - rect.top) / k;
+    let best = -1, bd = Infinity;
+    S.dishes.forEach((d, i) => { const dd = Math.hypot(d.cy - line, d.cx - samp); if (dd < d.r + 10 && dd < bd) { bd = dd; best = i; } });
+    if (best >= 0) selectDish(best);
+  });
+  window.addEventListener("resize", () => drawScan());
+
+  // ---------------------------------------------------------------- analysing a dish
+  let busy = false;
+  async function selectDish(i) {
+    if (busy || !S) return;
+    S.selected = i; drawScan(); showError("");
+    if (!S.results[i]) {
+      busy = true; setProgress(0, `Analysing dish ${i + 1}…`);
+      try {
+        S.results[i] = await CoffeeCore.analyseDish(S.scan, S.br, S.white, S.dishes[i], models, (p) => setProgress(p, `Analysing dish ${i + 1}… ${Math.round(p * 100)} %`));
+      } catch (err) { showError(`Dish ${i + 1}: ${err.message || err}`); busy = false; setProgress(null, "Click a dish to analyse it."); return; }
+      busy = false; setProgress(null, "Click another dish to compare.");
+      drawScan();
+    }
+    const card = $("resultCard"), first = card.hidden;
+    card.hidden = false; renderResult(i);
+    if (first) card.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function renderResult(i) {
+    const res = S.results[i], it = CoffeeCore.interpret(res, models);
+    $("resDish").textContent = `Dish ${i + 1} of ${S.dishes.length}`;
+    $("resType").textContent = it.typeLabel;
+    $("resConf").textContent = `${Math.round(it.confidence * 100)} % confident in the mixture type`;
+    const pm = it.plusMinus, comp = it.composition;
+    const rows = it.mixedBase
+      ? [["coffee", "Arabica + robusta", "linear-gradient(90deg, var(--s-arabica), var(--s-robusta))"], ["chicory", "Chicory", "var(--s-chicory)"]]
+      : [["robusta", "Robusta", "var(--s-robusta)"], ["arabica", "Arabica", "var(--s-arabica)"], ["chicory", "Chicory", "var(--s-chicory)"]];
+    $("comp").innerHTML = rows.map(([key, name, color]) => {
+      const inType = key === "coffee" || key === it.baseName || key === it.adulterantName, v = comp[key];
+      let main, sub;
+      if (!inType) { main = "–"; sub = "not in this mixture"; }
+      else if (key === it.adulterantName) {
+        if (!it.detected) { main = `< ${fmt(it.lod)} %`; sub = "not detected"; } else { main = `${fmt(v)} %`; sub = `± ${fmt(pm)} %`; }
+      } else { main = it.detected ? `${fmt(v)} %` : "≈ 100 %"; sub = (it.detected ? `± ${fmt(pm)} %` : "no chicory found") + (it.mixedBase ? " · split not measured" : ""); }
+      const width = inType ? (it.detected || key !== it.adulterantName ? v : 0) : 0;
+      const band = inType && it.detected ? `<em style="left:${Math.max(0, v - pm)}%;width:${Math.min(100, v + pm) - Math.max(0, v - pm)}%"></em>` : "";
+      return `<div class="comp-row"><span class="name"><i class="sw" style="background:${color}"></i>${name}</span>
+              <span class="bar" aria-hidden="true"><i style="width:${width}%;background:${color}"></i>${band}</span>
+              <span class="val">${main}<small>${sub}</small></span></div>`;
+    }).join("");
+    const notes = it.warnings.length ? it.warnings : [{ level: "ok", text: "This dish looks like the samples the models were trained on." }];
+    const label = { ok: "OK", warn: "Check", bad: "Caution" };
+    $("notes").innerHTML = notes.map((n) => `<div class="note ${n.level}"><b class="badge">${label[n.level]}</b><span>${esc(n.text)}</span></div>`).join("");
+    $("mapTitle").textContent = `${it.adulterantName[0].toUpperCase()}${it.adulterantName.slice(1)} across the dish`;
+    drawMap(res);
+    $("spreadText").textContent = Number.isFinite(res.spread)
+      ? `Spread between blocks of the dish: ± ${fmt(res.spread)} % (well-mixed training blends vary by about 1–2.5 %). Each block averages about 9 patches.`
+      : "Too few blocks to measure the spread across the dish.";
+    spectrumChart($("specSvg"), $("seriesKey"), $("specTip"),
+                  [{ name: "This dish", vals: res.meanReflectance, color: css("--ink"), width: 2.4 }, ...pureSeries().map((s) => ({ ...s, width: 1.6 }))],
+                  [[1730, "C–H lipid"], [2310, "C–H lipid"]]);
+    const D = models.families[res.family];
+    $("facts").innerHTML = [
+      ["Model", `${D.model.kind}, ${D.model.latent_variables} latent variables`],
+      ["Error on unseen sessions", `${fmt(D.error.loso_pooled_rmsep, 2)} % chicory (RMS, pooled over the held-out sessions)`],
+      ["Range shown (±)", `2 × that error, about a 95 % range`],
+      ["Mixture-type probabilities", Object.entries(res.probs).map(([c, p]) => `${models.families[c].name} ${Math.round(p * 100)} %`).join(" · ")],
+      ["Patches", `${res.nPatches} clean 12 × 12 px patches; ${res.nKept} used after dropping the least typical 10 %`],
+      ["Mask", `${res.maskPixels.toLocaleString()} powder pixels kept`],
+      ["Similarity to training dishes", `${fmt(Math.max(res.domainQ, res.domainT2), 2)} (typical dishes stay below 2; above 5 means unlike any training dish)`],
+      ["Dish position", `line ${res.dish.cy}, pixel ${res.dish.cx}, rim radius ${res.dish.r} px`],
+    ].map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join("");
+  }
+
+  // ---------------------------------------------------------------- map
+  const mapCanvas = $("mapCanvas");
+  let mapCells = [];
+  function drawMap(res) {
+    const d = res.dish, pad = d.r + 4, size = 360, dpr = window.devicePixelRatio || 1;
+    mapCanvas.width = size * dpr; mapCanvas.height = size * dpr;
+    const ctx = mapCanvas.getContext("2d"); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const k = size / (2 * pad), l0 = d.cy - pad, s0 = d.cx - pad;
+    ctx.fillStyle = "#000"; ctx.fillRect(0, 0, size, size);
+    ctx.globalAlpha = 0.9; ctx.drawImage(S.image, l0, s0, 2 * pad, 2 * pad, 0, 0, size, size); ctx.globalAlpha = 1;
+    mapCells = [];
+    for (const u of res.units) {
+      ctx.fillStyle = rampColor(u.pred);
+      for (const [row, col] of u.patches) {
+        const x = (row - 6 - l0) * k, y = (col - 6 - s0) * k, w = 12 * k;
+        ctx.globalAlpha = 0.86; ctx.fillRect(x + 0.4, y + 0.4, w - 0.8, w - 0.8);
+        mapCells.push([x, y, w, u]);
+      }
+    }
+    ctx.globalAlpha = 1;
+  }
+  mapCanvas.addEventListener("mousemove", (e) => {
+    const r = mapCanvas.getBoundingClientRect(), sx = 360 / r.width, x = (e.clientX - r.left) * sx, y = (e.clientY - r.top) * sx;
+    const hit = mapCells.find(([cx, cy, w]) => x >= cx && x < cx + w && y >= cy && y < cy + w), tip = $("mapTip");
+    if (!hit) { tip.hidden = true; return; }
+    tip.hidden = false; tip.textContent = `${fmt(hit[3].pred)} % here (block of ${hit[3].n} patches)`;
+    tip.style.left = `${Math.min(r.width - 170, e.clientX - r.left + 12)}px`; tip.style.top = `${e.clientY - r.top + 12}px`;
+  });
+  mapCanvas.addEventListener("mouseleave", () => { $("mapTip").hidden = true; });
+  (function drawRamp() { const c = $("rampCanvas"), ctx = c.getContext("2d"); for (let x = 0; x < c.width; x++) { ctx.fillStyle = rampColor((x / (c.width - 1)) * 50); ctx.fillRect(x, 0, 1, c.height); } })();
+
+  const rerender = () => { if (!$("viewHsi").hidden) drawLearnChart(); bean.redraw(); for (const w of Object.values(WIRES)) w.redraw(); if (S && S.selected !== null && !$("resultCard").hidden) renderResult(S.selected); };
+  window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", rerender);
+  new MutationObserver(rerender).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+  route();
+})();
+</script>

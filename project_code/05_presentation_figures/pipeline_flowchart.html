@@ -1,0 +1,324 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Chicory-in-Robusta Pipeline</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: one vertical flow read top to bottom; phase names sit in a left rail; loops are drawn as nested frames */
+:root {
+  --bg: #f4f4f1;
+  --surface: #fcfcfb;
+  --ink: #0b0b0b;
+  --ink2: #52514e;
+  --muted: #898781;
+  --line: #dcdbd3;
+  --line-strong: #a3a297;
+  --accent: #2a78d6;
+  --accent-soft: #e7f0fb;
+  --pending: #8a5a00;
+  --pending-soft: #f5ead2;
+  --font-sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #121211; --surface: #1b1b19; --ink: #ecebe6; --ink2: #b9b7af; --muted: #8c8a82;
+    --line: #34332f; --line-strong: #6e6d66; --accent: #6aa5ec; --accent-soft: #172638;
+    --pending: #e2b458; --pending-soft: #32281a; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #121211; --surface: #1b1b19; --ink: #ecebe6; --ink2: #b9b7af; --muted: #8c8a82;
+  --line: #34332f; --line-strong: #6e6d66; --accent: #6aa5ec; --accent-soft: #172638;
+  --pending: #e2b458; --pending-soft: #32281a; color-scheme: dark;
+}
+
+body { background: var(--bg); color: var(--ink); font-family: var(--font-sans); font-size: 15px; line-height: 1.5; }
+.page { max-width: 900px; margin: 0 auto; padding-inline: 20px; padding-block: 40px 56px; }
+
+header { display: grid; gap: 8px; margin-bottom: 36px; }
+.eyebrow { margin: 0; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink2); }
+h1 { margin: 0; font-size: 32px; line-height: 1.15; font-weight: 600; text-wrap: balance; }
+.lede { margin: 0; max-width: 64ch; color: var(--ink2); }
+
+.flow { display: grid; }
+.phase { display: grid; grid-template-columns: 150px minmax(0, 1fr); column-gap: 24px; }
+.rail { padding-top: 12px; display: grid; align-content: start; gap: 4px; }
+.rail h2 { margin: 0; font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--ink); }
+.nb { font-family: var(--font-mono); font-size: 11.5px; color: var(--muted); overflow-wrap: anywhere; }
+.col { display: grid; min-width: 0; }
+
+.step { display: grid; grid-template-columns: 26px minmax(0, 1fr); column-gap: 10px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 12px 14px; }
+.num { font-family: var(--font-mono); font-size: 12px; color: var(--muted); padding-top: 2px; font-variant-numeric: tabular-nums; }
+.step h3 { margin: 0 0 3px; font-size: 15px; font-weight: 600; line-height: 1.35; text-wrap: balance; }
+.step p { margin: 0; font-size: 13.5px; color: var(--ink2); max-width: 64ch; }
+.step p + p { margin-top: 6px; }
+.formula { display: inline-block; margin: 6px 0 2px; padding: 3px 8px; border-radius: 4px; background: var(--bg);
+  font-family: var(--font-mono); font-size: 13px; color: var(--ink); }
+.stats { display: flex; flex-wrap: wrap; gap: 4px 16px; margin-top: 8px; font-family: var(--font-mono); font-size: 12px; color: var(--ink); font-variant-numeric: tabular-nums; }
+
+table.sessions { margin-top: 8px; border-collapse: collapse; font-size: 12.5px; color: var(--ink2); }
+table.sessions th, table.sessions td { text-align: left; padding: 3px 14px 3px 0; border-top: 1px solid var(--line); vertical-align: top; }
+table.sessions th { font-weight: 500; color: var(--ink); white-space: nowrap; }
+table.sessions td.d { font-family: var(--font-mono); font-size: 12px; white-space: nowrap; }
+.tablewrap { overflow-x: auto; }
+
+/* connector: vertical line + arrowhead, label names what flows along it */
+.arrow { position: relative; height: 38px; margin-left: 27px; }
+.arrow::before { content: ""; position: absolute; left: 0; top: 0; bottom: 7px; border-left: 1.5px solid var(--line-strong); }
+.arrow::after { content: ""; position: absolute; left: -5px; bottom: 0; border-left: 5.75px solid transparent;
+  border-right: 5.75px solid transparent; border-top: 7px solid var(--line-strong); }
+.arrow .lbl { position: absolute; left: 16px; right: 0; top: 50%; transform: translateY(-50%);
+  font-family: var(--font-mono); font-size: 12px; color: var(--ink2); line-height: 1.3; }
+.arrow.short { height: 24px; }
+
+.loop { border: 1.5px dashed var(--accent); border-radius: 10px; padding: 12px; display: grid; }
+.loop.inner { border: 1.5px dotted var(--line-strong); }
+.loop-head { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin-bottom: 12px;
+  font-size: 13px; font-weight: 600; color: var(--accent); }
+.loop.inner .loop-head { color: var(--ink2); }
+.loop-head svg { flex: none; }
+.chips { display: flex; flex-wrap: wrap; gap: 5px; }
+.chip { font-family: var(--font-mono); font-size: 11.5px; font-weight: 400; color: var(--ink2); background: var(--surface);
+  border: 1px solid var(--line); border-radius: 999px; padding: 1px 8px; white-space: nowrap; }
+.chip.win { color: var(--accent); border-color: var(--accent); }
+
+.result { border: 1.5px solid var(--accent); background: var(--accent-soft); border-radius: 8px; padding: 18px; display: grid; gap: 14px; }
+.result .kicker { margin: 0; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink2); }
+.headline { margin: 0; font-size: 36px; line-height: 1.1; font-weight: 600; font-variant-numeric: tabular-nums; }
+.headline span { display: block; margin-top: 4px; font-size: 14px; font-weight: 400; color: var(--ink2); }
+.metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.metric { display: grid; gap: 2px; min-width: 0; }
+.metric .k { font-size: 11.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink2); }
+.metric .v { font-family: var(--font-mono); font-size: 15px; color: var(--ink); font-variant-numeric: tabular-nums; }
+.result p { margin: 0; font-size: 13.5px; color: var(--ink2); }
+
+.ask { border: 1.5px solid var(--line-strong); border-radius: 6px; background: var(--surface); padding: 12px 14px; }
+.ask h3 { margin: 0 0 3px; font-size: 15px; font-weight: 600; }
+.ask p { margin: 0; font-size: 13.5px; color: var(--ink2); }
+.branches { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.branch { display: grid; min-width: 0; }
+.branch .step { grid-template-columns: minmax(0, 1fr); }
+.pending { display: inline-block; margin-top: 10px; padding: 2px 8px; border-radius: 4px; font-family: var(--font-mono);
+  font-size: 11.5px; color: var(--pending); background: var(--pending-soft); }
+
+footer { margin-top: 36px; padding-top: 14px; border-top: 1px solid var(--line); font-size: 12.5px; color: var(--muted); max-width: 72ch; }
+footer code { font-family: var(--font-mono); font-size: 12px; color: var(--ink2); }
+
+@media (max-width: 680px) {
+  h1 { font-size: 26px; }
+  .phase { grid-template-columns: minmax(0, 1fr); }
+  .rail { padding-top: 4px; padding-bottom: 8px; grid-auto-flow: row; }
+  .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .branches { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .loop { padding: 10px 8px; }
+  .headline { font-size: 30px; }
+}
+</style>
+
+<div class="page">
+  <header>
+    <p class="eyebrow">SWIR hyperspectral imaging · roasted coffee powder</p>
+    <h1>Chicory-in-Robusta Pipeline</h1>
+    <p class="lede">How the final model was built and tested, from weighing the blends to the reported error. Each phase names the notebook that runs it. Numbers are from the run on 2 October 2026.</p>
+  </header>
+
+  <figure class="flow" aria-label="Project pipeline flow chart">
+
+    <!-- ACQUIRE -->
+    <section class="phase">
+      <div class="rail"><h2>Acquire</h2><span class="nb">lab</span></div>
+      <div class="col">
+        <div class="step"><span class="num">1</span><div>
+          <h3>Prepare the blends</h3>
+          <p>Weigh roasted robusta and roasted chicory into 11 levels, 0 to 50 % chicory in 5 % steps. Session 1 also holds pure chicory (CH100), arabica (AB100) and the unknowns A, B and C.</p>
+        </div></div>
+        <div class="arrow short"></div>
+        <div class="step"><span class="num">2</span><div>
+          <h3>Scan with the SWIR camera</h3>
+          <p>HySpex SWIR-384 push-broom camera, 952–2517 nm in 288 bands, 9000 µs integration. A Spectralon white strip sits at the top of every scan. Each dish is re-stirred and scanned three times.</p>
+          <div class="tablewrap"><table class="sessions">
+            <tr><th>Session 1</th><td class="d">1 Sep</td><td>0 % (RB100), plus A, B, C, CH100, AB100</td></tr>
+            <tr><th>Session 2</th><td class="d">4 Sep</td><td>10, 20, 30, 40, 50 %</td></tr>
+            <tr><th>Session 3</th><td class="d">8 Sep</td><td>5, 15, 25, 35, 45 %</td></tr>
+          </table></div>
+        </div></div>
+        <div class="arrow"><span class="lbl">9 radiance cubes, about 0.8 GB each</span></div>
+      </div>
+    </section>
+
+    <!-- EXTRACT -->
+    <section class="phase">
+      <div class="rail"><h2>Extract spectra</h2><span class="nb">reflectance_training_samples.ipynb</span><span class="nb">…_batch3.ipynb</span></div>
+      <div class="col">
+        <div class="step"><span class="num">3</span><div>
+          <h3>Mark the white strip and the dishes</h3>
+          <p>Draw the reference strip and an ellipse around each dish on every scan. The shapes are saved in <span class="nb">rois.json</span>.</p>
+        </div></div>
+        <div class="arrow short"></div>
+        <div class="step"><span class="num">4</span><div>
+          <h3>Convert radiance to reflectance</h3>
+          <span class="formula">R = L / W(column) × R_certified</span>
+          <p>The white reference is measured for every across-track column, so the lamp and lens profile cancel out.</p>
+        </div></div>
+        <div class="arrow short"></div>
+        <div class="step"><span class="num">5</span><div>
+          <h3>Clean each dish mask</h3>
+          <p>Remove rim and shadow (below 55 % of the dish median), specular highlights (above the 99.7th percentile) and 4 px of edge.</p>
+        </div></div>
+        <div class="arrow short"></div>
+        <div class="step"><span class="num">6</span><div>
+          <h3>Cut each dish into patches</h3>
+          <p>12 × 12 px non-overlapping patches with at least 92 % valid pixels, up to 150 per dish. Each patch becomes one averaged spectrum, labelled with chicory %, session, stir and role.</p>
+        </div></div>
+        <div class="arrow"><span class="lbl">training_samples.csv (sessions 1–2) + batch3 (session 3)</span></div>
+      </div>
+    </section>
+
+    <!-- PREPARE -->
+    <section class="phase">
+      <div class="rail"><h2>Prepare</h2><span class="nb">robusta_chicory_nested_loso.ipynb</span></div>
+      <div class="col">
+        <div class="step"><span class="num">7</span><div>
+          <h3>Keep the calibration series</h3>
+          <p>RB100 and the ten blends only. The unknowns, pure chicory and arabica are left out. Keep 1000–2450 nm.</p>
+          <div class="stats"><span>33 dishes</span><span>11 levels</span><span>4,910 patches</span><span>266 bands</span></div>
+        </div></div>
+        <div class="arrow short"></div>
+        <div class="step"><span class="num">8</span><div>
+          <h3>Preprocess every spectrum</h3>
+          <span class="formula">A = log₁₀(1/R) − mean(A)</span>
+          <p>Absorbance turns the 1.15× brightness difference between sessions into a constant offset, and subtracting each spectrum's mean removes it. Chosen over SNV, MSC and derivatives because it transfers best to a new session.</p>
+        </div></div>
+        <div class="arrow"><span class="lbl">4,910 preprocessed spectra</span></div>
+      </div>
+    </section>
+
+    <!-- EVALUATE -->
+    <section class="phase">
+      <div class="rail"><h2>Evaluate</h2><span class="nb">nested leave-one-session-out</span></div>
+      <div class="col">
+        <div class="loop">
+          <div class="loop-head">
+            <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M13.2 8.6A5.2 5.2 0 1 1 11.6 4.2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M12.2 1.6v3.1H9.1" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span>Repeat 3×: hold one session out, train on the other two</span>
+            <span class="chips"><span class="chip">session 1 out</span><span class="chip">session 2 out</span><span class="chip">session 3 out</span></span>
+          </div>
+
+          <div class="step"><span class="num">9</span><div>
+            <h3>Trim noisy patches</h3>
+            <p>Drop the worst 10 % of patches in each dish by spectral residual. The trimming model is fitted on the two training sessions only.</p>
+          </div></div>
+          <div class="arrow short"></div>
+          <div class="step"><span class="num">10</span><div>
+            <h3>Build super-patches</h3>
+            <p>Average about 8 neighbouring patches into one unit, so each unit covers enough powder to reflect the blend.</p>
+          </div></div>
+          <div class="arrow"><span class="lbl">284–480 training units, 44–240 test units</span></div>
+
+          <div class="loop inner">
+            <div class="loop-head">
+              <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M13.2 8.6A5.2 5.2 0 1 1 11.6 4.2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M12.2 1.6v3.1H9.1" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span>Repeat for each of the 8 methods</span>
+              <span class="chips"><span class="chip">PLSR</span><span class="chip">PCR</span><span class="chip">Ridge</span><span class="chip">ElasticNet</span><span class="chip">SVR linear</span><span class="chip">SVR RBF</span><span class="chip">Random Forest</span><span class="chip">Gradient Boosting</span></span>
+            </div>
+            <div class="step"><span class="num">11</span><div>
+              <h3>Tune the method's setting</h3>
+              <p>Inner loop on the training sessions: hold out one concentration level at a time. Pick the simplest setting within one standard error of the best (latent variables for PLSR, alpha for Ridge, C for SVR).</p>
+            </div></div>
+            <div class="arrow short"></div>
+            <div class="step"><span class="num">12</span><div>
+              <h3>Fit on the two training sessions</h3>
+              <p>Train the method with the chosen setting.</p>
+            </div></div>
+            <div class="arrow short"></div>
+            <div class="step"><span class="num">13</span><div>
+              <h3>Predict the held-out session</h3>
+              <p>Average the predictions per dish and score the error against the weighed value (plate RMSEP).</p>
+            </div></div>
+          </div>
+        </div>
+        <div class="arrow"><span class="lbl">3 held-out errors for each method</span></div>
+      </div>
+    </section>
+
+    <!-- SELECT -->
+    <section class="phase">
+      <div class="rail"><h2>Select</h2><span class="nb">robusta_chicory_nested_loso.ipynb</span></div>
+      <div class="col">
+        <div class="step"><span class="num">14</span><div>
+          <h3>Average and rank the methods</h3>
+          <p>Mean of the three held-out errors, each session counted once. The lowest mean wins, and a bootstrap over dishes tests it against the runner-up.</p>
+          <div class="stats"><span>PLSR 0.79 %</span><span>SVR linear 0.83 %</span><span>statistical tie, PLSR kept</span><span>nonlinear 3.8–8.1 %</span></div>
+        </div></div>
+        <div class="arrow"><span class="lbl">PLSR</span></div>
+      </div>
+    </section>
+
+    <!-- FINALISE -->
+    <section class="phase">
+      <div class="rail"><h2>Finalise</h2><span class="nb">final_regression/</span></div>
+      <div class="col">
+        <div class="step"><span class="num">15</span><div>
+          <h3>Choose latent variables on all three sessions</h3>
+          <p>The same inner rule, now run on all the data. The three folds chose 6, 7 and 6; the final model uses 6.</p>
+        </div></div>
+        <div class="arrow short"></div>
+        <div class="step"><span class="num">16</span><div>
+          <h3>Refit and save</h3>
+          <p>PLSR with 6 latent variables on all 524 super-patches, saved with its preprocessing settings.</p>
+          <div class="stats"><span>robusta_chicory_model.pkl</span></div>
+        </div></div>
+        <div class="arrow"><span class="lbl">final model</span></div>
+      </div>
+    </section>
+
+    <!-- RESULTS -->
+    <section class="phase">
+      <div class="rail"><h2>Results</h2><span class="nb">summary.json</span><span class="nb">figures 01–05</span></div>
+      <div class="col">
+        <div class="result">
+          <p class="kicker">Reported error, from the held-out sessions in steps 9–13</p>
+          <p class="headline">0.79 ± 0.28 %<span>mean error in % chicory on scanning sessions the model never saw</span></p>
+          <div class="metrics">
+            <div class="metric"><span class="k">Per session</span><span class="v">0.61 · 0.64 · 1.11</span></div>
+            <div class="metric"><span class="k">Pooled</span><span class="v">0.88 %</span></div>
+            <div class="metric"><span class="k">R²</span><span class="v">0.997</span></div>
+            <div class="metric"><span class="k">RPD</span><span class="v">18.2</span></div>
+          </div>
+          <p>The model relies most on 1704–1764 nm, the C–H lipid band: coffee oil absorbs there and chicory barely does.</p>
+        </div>
+
+        <div class="arrow"><span class="lbl">applying the final model to new samples</span></div>
+        <div class="ask">
+          <h3>Is the spectrum inside the calibrated range?</h3>
+          <p>Spectral residual relative to pure robusta must stay below 2.</p>
+        </div>
+        <div class="branches">
+          <div class="branch">
+            <div class="arrow"><span class="lbl">yes</span></div>
+            <div class="step"><div>
+              <h3>Quote the chicory %</h3>
+              <p>Sample A: about 31–32 % chicory, 68 % robusta.</p>
+            </div></div>
+          </div>
+          <div class="branch">
+            <div class="arrow"><span class="lbl">no</span></div>
+            <div class="step"><div>
+              <h3>Report as detected only</h3>
+              <p>Samples B and C and pure chicory: their spectra differ from every calibration blend (residual 3.8–4.4).</p>
+            </div></div>
+          </div>
+        </div>
+        <span class="pending">Unknowns predicted in session_wise_models.ipynb; re-run with the final model to confirm</span>
+      </div>
+    </section>
+  </figure>
+
+  <footer>
+    Sources: <code>reflectance_training_samples*.ipynb</code>, <code>robusta_chicory_nested_loso.ipynb</code>, <code>final_regression/summary.json</code>, <code>session_wise_models.ipynb</code>. Preprocessing, trimming level and super-patch size were fixed from earlier work on all three sessions; the number of latent variables and each method's setting were chosen inside every fold.
+  </footer>
+</div>
+
+</body></html>

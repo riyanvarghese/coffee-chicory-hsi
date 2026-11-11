@@ -1,0 +1,15 @@
+features,method,balanced_accuracy,correct,RBCH recall,ABCH recall,ARC recall,settings_per_fold
+absorbance + offset,PCA-LDA,0.9494949494949495,94/99,32/33,29/33,33/33,10 10 20 5 10 5 5 10 15
+absorbance + offset,Logistic regression,0.9494949494949495,94/99,33/33,33/33,28/33,1 0.1 0.1 1 1 1 1 1 0.1
+"chemistry bands, 1st derivative",Logistic regression,0.9292929292929294,92/99,31/33,33/33,28/33,10 10 10 10 10 10 10 10 10
+absorbance + offset,SIMCA,0.8989898989898991,89/99,33/33,33/33,23/33,6 6 6 6 6 6 4 4 4
+"chemistry bands, 1st derivative",PCA-LDA,0.8585858585858587,85/99,33/33,28/33,24/33,15 20 20 15 20 15 15 20 8
+"chemistry bands, 1st derivative",SIMCA,0.8484848484848485,84/99,33/33,30/33,21/33,6 6 6 6 6 6 6 6 6
+"chemistry bands, 1st derivative",Linear SVM,0.8383838383838383,83/99,33/33,33/33,17/33,1 1 1 1 0.1 1 0.01 1 0.01
+absorbance + offset,Random Forest,0.797979797979798,79/99,31/33,28/33,20/33,3 3 3 3 3 3 3 3 3
+absorbance + offset,Linear SVM,0.787878787878788,78/99,33/33,30/33,15/33,0.01 0.1 0.1 0.1 0.0003 1 0.0003 1 0.0003
+absorbance + offset,PLS-DA,0.7070707070707071,70/99,33/33,24/33,13/33,6 5 6 6 5 6 5 12 5
+"chemistry bands, 1st derivative",PLS-DA,0.6868686868686869,68/99,32/33,22/33,14/33,12 12 5 12 10 5 8 12 12
+absorbance + offset,kNN (PCA scores),0.6767676767676768,67/99,29/33,28/33,10/33,3 9 5 5 3 3 5 5 3
+"chemistry bands, 1st derivative",Random Forest,0.6464646464646464,64/99,32/33,21/33,11/33,3 3 3 3 10 3 10 3 10
+"chemistry bands, 1st derivative",kNN (PCA scores),0.6363636363636364,63/99,30/33,22/33,11/33,5 5 5 5 5 5 5 5 5

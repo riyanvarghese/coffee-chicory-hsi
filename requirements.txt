@@ -1,0 +1,14 @@
+# versions the results were produced with (Python 3.14)
+numpy==2.5.1
+pandas==3.0.5
+scipy==1.18.0
+scikit-learn==1.9.0
+matplotlib==3.11.1
+pillow==12.3.0
+opencv-python==5.0.0.93
+spectral==0.25
+jupyterlab
+ipykernel
+nbconvert
+# slide-building scripts only
+python-pptx==1.0.2

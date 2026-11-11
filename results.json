@@ -1,0 +1,235 @@
+{
+  "dataset": {
+    "patches": 6633,
+    "plates": 45,
+    "scans": 9,
+    "bands": 266,
+    "levels": [
+      0.0,
+      5.0,
+      10.0,
+      15.0,
+      20.0,
+      25.0,
+      30.0,
+      35.0,
+      40.0,
+      45.0,
+      50.0
+    ]
+  },
+  "strongest_band_nm": 2348.0,
+  "strongest_band_r": -0.8937328052155987,
+  "preprocessing": {
+    "chosen": "absorbance+offset",
+    "session_bias": 1.48,
+    "snv_bias": 11.14
+  },
+  "lv_curve": {
+    "components": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10
+    ],
+    "rmsec": [
+      6.52,
+      3.268,
+      3.012,
+      2.397,
+      1.803,
+      1.533,
+      1.477,
+      1.404,
+      1.341,
+      1.314
+    ],
+    "rmsecv": [
+      7.285,
+      4.355,
+      3.745,
+      2.685,
+      2.053,
+      1.706,
+      1.67,
+      1.671,
+      1.724,
+      1.709
+    ],
+    "chosen": 6
+  },
+  "model_comparison": [
+    {
+      "model": "PCR (PCA+OLS)",
+      "rmsecv_level": 1.589,
+      "rmsecv_plate": 0.7,
+      "session_bias": 10.367,
+      "r2": 0.99
+    },
+    {
+      "model": "Ridge",
+      "rmsecv_level": 1.643,
+      "rmsecv_plate": 0.747,
+      "session_bias": 13.595,
+      "r2": 0.989
+    },
+    {
+      "model": "ElasticNet",
+      "rmsecv_level": 1.649,
+      "rmsecv_plate": 0.737,
+      "session_bias": 12.896,
+      "r2": 0.989
+    },
+    {
+      "model": "PLSR (chosen)",
+      "rmsecv_level": 1.706,
+      "rmsecv_plate": 0.707,
+      "session_bias": 8.908,
+      "r2": 0.988
+    },
+    {
+      "model": "SVR (linear)",
+      "rmsecv_level": 1.988,
+      "rmsecv_plate": 0.937,
+      "session_bias": 15.431,
+      "r2": 0.984
+    },
+    {
+      "model": "PLSR 3 LV",
+      "rmsecv_level": 3.745,
+      "rmsecv_plate": 2.872,
+      "session_bias": 3.616,
+      "r2": 0.943
+    },
+    {
+      "model": "Gradient Boosting",
+      "rmsecv_level": 4.484,
+      "rmsecv_plate": 3.344,
+      "session_bias": 21.149,
+      "r2": 0.919
+    },
+    {
+      "model": "SVR (RBF)",
+      "rmsecv_level": 5.162,
+      "rmsecv_plate": 5.052,
+      "session_bias": 36.773,
+      "r2": 0.892
+    },
+    {
+      "model": "Random Forest",
+      "rmsecv_level": 5.196,
+      "rmsecv_plate": 3.738,
+      "session_bias": 15.847,
+      "r2": 0.891
+    }
+  ],
+  "final_model": {
+    "n_latent": 6,
+    "k_unit": 8,
+    "units": 524,
+    "plates": 33,
+    "levels": 11,
+    "rmsecv_unit": 1.71,
+    "rmsecv_plate": 0.71,
+    "r2": 0.9882
+  },
+  "top_wavelengths": [
+    1704,
+    1710,
+    1715,
+    1721,
+    1726,
+    1732,
+    1737,
+    1743,
+    1748,
+    1753,
+    1759,
+    1764
+  ],
+  "external_validation": {
+    "rmsep": 1.16,
+    "r2": 0.9932,
+    "bias": -0.03,
+    "slope": 0.934,
+    "intercept": 1.62,
+    "rpd": 13.58,
+    "rer": 34.36,
+    "n_samples": 5
+  },
+  "permutation_p": 0.0033222591362126247,
+  "unknowns": [
+    {
+      "sample": "A",
+      "chicory": 31.2,
+      "robusta": 68.8,
+      "unc": 3.5,
+      "Q_rel": 1.65,
+      "verdict": "quantifiable"
+    },
+    {
+      "sample": "B",
+      "chicory": 50.9,
+      "robusta": NaN,
+      "unc": 2.0,
+      "Q_rel": 4.35,
+      "verdict": "detect only"
+    },
+    {
+      "sample": "C",
+      "chicory": 38.5,
+      "robusta": NaN,
+      "unc": 2.5,
+      "Q_rel": 4.25,
+      "verdict": "detect only"
+    }
+  ],
+  "literature": [
+    {
+      "study": "Harohally 2021 \u2014 robusta+chicory, FT-NIR",
+      "range_pct": "0\u2013100",
+      "levels": "~40",
+      "LV": 5,
+      "error": 1.29,
+      "spatial": "no"
+    },
+    {
+      "study": "Harohally 2021 \u2014 arabica+chicory, FT-NIR",
+      "range_pct": "0\u2013100",
+      "levels": "~40",
+      "LV": 3,
+      "error": 0.9,
+      "spatial": "no"
+    },
+    {
+      "study": "Forchetti 2020 \u2014 NIR-HSI + MCR",
+      "range_pct": "1\u201340",
+      "levels": "5",
+      "LV": 2,
+      "error": 4.0,
+      "spatial": "4 mm\u00b2"
+    },
+    {
+      "study": "Coqueiro 2024 \u2014 NIR, coffee husk",
+      "range_pct": "0\u201350",
+      "levels": "6",
+      "LV": 20,
+      "error": 3.94,
+      "spatial": "no"
+    },
+    {
+      "study": "THIS WORK \u2014 SWIR-HSI (external)",
+      "range_pct": "0\u201350",
+      "levels": "11",
+      "LV": 6,
+      "error": 1.164,
+      "spatial": "full dish"
+    }
+  ]
+}

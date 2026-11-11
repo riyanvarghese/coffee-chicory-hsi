@@ -1,0 +1,259 @@
+{
+  "selected_model": "PLSR 6 LV",
+  "selection_rule": "lowest mean plate RMSEP over the three held-out sessions (leave-one-session-out)",
+  "settings": {
+    "wl_nm": [
+      1000.0,
+      2450.0
+    ],
+    "trim_pct": 10,
+    "patches_per_unit": 8,
+    "n_comp": 6
+  },
+  "loso": {
+    "per_held_out_session": {
+      "1": {
+        "levels": 1,
+        "plates": 3,
+        "rmsep_plate": 0.611,
+        "rmsep_sample": 0.07,
+        "bias": 0.037,
+        "r2": null,
+        "slope": null,
+        "intercept": null
+      },
+      "2": {
+        "levels": 5,
+        "plates": 15,
+        "rmsep_plate": 0.731,
+        "rmsep_sample": 0.613,
+        "bias": 0.147,
+        "r2": 0.997,
+        "slope": 1.017,
+        "intercept": -0.378
+      },
+      "3": {
+        "levels": 5,
+        "plates": 15,
+        "rmsep_plate": 1.111,
+        "rmsep_sample": 1.002,
+        "bias": -0.211,
+        "r2": 0.994,
+        "slope": 0.953,
+        "intercept": 0.958
+      }
+    },
+    "mean_rmsep_plate": 0.818,
+    "sd_rmsep_plate": 0.261,
+    "pooled_rmsep_plate": 0.915,
+    "pooled_r2": 0.997
+  },
+  "runner_up": {
+    "model": "ElasticNet",
+    "mean_rmsep_plate": 0.833,
+    "difference_ci95": [
+      -0.118,
+      0.094
+    ],
+    "tie": true
+  },
+  "per_session_models": {
+    "trained": [
+      2,
+      3
+    ],
+    "skipped": [
+      1
+    ],
+    "within_cv_rmsep": 2.856,
+    "transfer_rmsep": 0.809
+  },
+  "all_models": [
+    {
+      "model": "PLSR 6 LV",
+      "loso_mean_rmsep": 0.818,
+      "loso_sd_rmsep": 0.261,
+      "loso_worst_rmsep": 1.111,
+      "loso_max_abs_bias": 0.211,
+      "loso_pooled_rmsep": 0.915,
+      "loso_pooled_r2": 0.997,
+      "A_within_cv": 2.856,
+      "A_transfer_rmsep": 0.809
+    },
+    {
+      "model": "ElasticNet",
+      "loso_mean_rmsep": 0.833,
+      "loso_sd_rmsep": 0.296,
+      "loso_worst_rmsep": 1.173,
+      "loso_max_abs_bias": 0.283,
+      "loso_pooled_rmsep": 0.923,
+      "loso_pooled_r2": 0.997,
+      "A_within_cv": 3.0,
+      "A_transfer_rmsep": 1.023
+    },
+    {
+      "model": "Ridge",
+      "loso_mean_rmsep": 0.841,
+      "loso_sd_rmsep": 0.296,
+      "loso_worst_rmsep": 1.183,
+      "loso_max_abs_bias": 0.35,
+      "loso_pooled_rmsep": 0.938,
+      "loso_pooled_r2": 0.996,
+      "A_within_cv": 2.637,
+      "A_transfer_rmsep": 0.885
+    },
+    {
+      "model": "PCR (PCA+OLS)",
+      "loso_mean_rmsep": 0.881,
+      "loso_sd_rmsep": 0.391,
+      "loso_worst_rmsep": 1.277,
+      "loso_max_abs_bias": 1.011,
+      "loso_pooled_rmsep": 0.778,
+      "loso_pooled_r2": 0.998,
+      "A_within_cv": 1.973,
+      "A_transfer_rmsep": 1.1
+    },
+    {
+      "model": "SVR (linear)",
+      "loso_mean_rmsep": 1.538,
+      "loso_sd_rmsep": 0.723,
+      "loso_worst_rmsep": 2.314,
+      "loso_max_abs_bias": 2.182,
+      "loso_pooled_rmsep": 1.324,
+      "loso_pooled_r2": 0.993,
+      "A_within_cv": 4.27,
+      "A_transfer_rmsep": 2.366
+    },
+    {
+      "model": "PLSR 3 LV",
+      "loso_mean_rmsep": 3.47,
+      "loso_sd_rmsep": 2.791,
+      "loso_worst_rmsep": 6.688,
+      "loso_max_abs_bias": 6.547,
+      "loso_pooled_rmsep": 2.69,
+      "loso_pooled_r2": 0.971,
+      "A_within_cv": 3.993,
+      "A_transfer_rmsep": 3.766
+    },
+    {
+      "model": "Gradient Boosting",
+      "loso_mean_rmsep": 3.653,
+      "loso_sd_rmsep": 0.795,
+      "loso_worst_rmsep": 4.509,
+      "loso_max_abs_bias": 4.507,
+      "loso_pooled_rmsep": 3.374,
+      "loso_pooled_r2": 0.954,
+      "A_within_cv": 10.067,
+      "A_transfer_rmsep": 4.281
+    },
+    {
+      "model": "Random Forest",
+      "loso_mean_rmsep": 3.753,
+      "loso_sd_rmsep": 1.203,
+      "loso_worst_rmsep": 5.0,
+      "loso_max_abs_bias": 5.0,
+      "loso_pooled_rmsep": 3.381,
+      "loso_pooled_r2": 0.954,
+      "A_within_cv": 10.012,
+      "A_transfer_rmsep": 4.419
+    },
+    {
+      "model": "SVR (RBF)",
+      "loso_mean_rmsep": 6.383,
+      "loso_sd_rmsep": 6.608,
+      "loso_worst_rmsep": 13.882,
+      "loso_max_abs_bias": 13.88,
+      "loso_pooled_rmsep": 5.018,
+      "loso_pooled_r2": 0.899,
+      "A_within_cv": 11.396,
+      "A_transfer_rmsep": 10.285
+    }
+  ],
+  "session1_predictions": [
+    {
+      "sample": "RB100",
+      "true": 0.0,
+      "fold1": 0.1,
+      "fold2": null,
+      "fold3": null,
+      "loso_mean": 0.1,
+      "fold_sd": 0.0,
+      "uncertainty": 0.9,
+      "robusta_pct": 99.9,
+      "refit_all": 0.1,
+      "session2_model": 0.7,
+      "session3_model": -1.1,
+      "designA_mean": -0.2,
+      "Q_rel": 1.0,
+      "verdict": "quantifiable"
+    },
+    {
+      "sample": "A",
+      "true": null,
+      "fold1": 30.1,
+      "fold2": 33.1,
+      "fold3": 32.3,
+      "loso_mean": 31.8,
+      "fold_sd": 1.5,
+      "uncertainty": 1.8,
+      "robusta_pct": 68.2,
+      "refit_all": 31.2,
+      "session2_model": 33.2,
+      "session3_model": 33.4,
+      "designA_mean": 33.3,
+      "Q_rel": 1.65,
+      "verdict": "quantifiable"
+    },
+    {
+      "sample": "B",
+      "true": null,
+      "fold1": 50.0,
+      "fold2": 47.8,
+      "fold3": 51.9,
+      "loso_mean": 49.9,
+      "fold_sd": 2.0,
+      "uncertainty": 2.2,
+      "robusta_pct": null,
+      "refit_all": 50.9,
+      "session2_model": 48.8,
+      "session3_model": 49.6,
+      "designA_mean": 49.2,
+      "Q_rel": 4.35,
+      "verdict": "outside calibrated space \u2014 detect only"
+    },
+    {
+      "sample": "C",
+      "true": null,
+      "fold1": 37.5,
+      "fold2": 39.6,
+      "fold3": 47.9,
+      "loso_mean": 41.7,
+      "fold_sd": 5.5,
+      "uncertainty": 5.6,
+      "robusta_pct": null,
+      "refit_all": 38.5,
+      "session2_model": 43.3,
+      "session3_model": 33.9,
+      "designA_mean": 38.6,
+      "Q_rel": 4.25,
+      "verdict": "outside calibrated space \u2014 detect only"
+    },
+    {
+      "sample": "CH100",
+      "true": 100.0,
+      "fold1": 87.9,
+      "fold2": 86.9,
+      "fold3": 84.5,
+      "loso_mean": 86.4,
+      "fold_sd": 1.7,
+      "uncertainty": 2.0,
+      "robusta_pct": null,
+      "refit_all": 88.0,
+      "session2_model": 83.9,
+      "session3_model": 89.0,
+      "designA_mean": 86.4,
+      "Q_rel": 3.77,
+      "verdict": "outside calibrated space \u2014 detect only"
+    }
+  ]
+}

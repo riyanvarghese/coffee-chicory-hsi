@@ -1,0 +1,31 @@
+4950 patches | 33 plates | 266 bands (1001-2446 nm)
+                   chicory  plates  patches
+session label                              
+1       AB100          0.0       3      450
+2       AB[50:50]     50.0       3      450
+        AB[60:40]     40.0       3      450
+        AB[70:30]     30.0       3      450
+        AB[80:20]     20.0       3      450
+        AB[90:10]     10.0       3      450
+3       AB[55:45]     45.0       3      450
+        AB[65:35]     35.0       3      450
+        AB[75:25]     25.0       3      450
+        AB[85:15]     15.0       3      450
+        AB[95:5]       5.0       3      450
+ABCH: 4950 patches, 33 dishes, sessions [1, 2, 3], 266 bands
+  absorbance + offset + EMSC               done  (1.5 min)
+    current model, per held-out session: [0.38, 1.28, 0.68]
+  absorbance + offset                      done  (4.1 min)
+  absorbance                               done  (5.0 min)
+  raw reflectance                          done  (6.4 min)
+  SNV                                      done  (7.9 min)
+  MSC                                      done  (9.8 min)
+  absorbance + SNV + SG1                   done  (11.2 min)
+  absorbance + SG1                         done  (12.2 min)
+  SG1                                      done  (13.2 min)
+  SG2                                      done  (14.5 min)
+  chemistry bands: absorbance + offset     done  (14.7 min)
+  chemistry bands: absorbance + SG1        done  (14.9 min)
+  chemistry bands: absorbance + SG2        done  (15.1 min)
+  chemistry bands: EMSC                    done  (15.3 min)
+reference check ('absorbance + offset + EMSC', 'PLSR'): this run [0.38, 1.28, 0.68] | published [0.38, 1.28, 0.68] | MATCH

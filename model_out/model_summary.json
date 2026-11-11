@@ -1,0 +1,77 @@
+{
+  "preprocessing": "absorbance+offset",
+  "n_latent": 4,
+  "wl_range": [
+    1001.0,
+    2446.0
+  ],
+  "n_bands": 266,
+  "calibration_levels": [
+    0.0,
+    10.0,
+    20.0,
+    30.0,
+    40.0,
+    50.0
+  ],
+  "n_calibration_patches": 2660,
+  "n_calibration_plates": 18,
+  "rmsecv_level": 5.206,
+  "rmsecv_plate": 4.897,
+  "rmsecv_stir": 4.974,
+  "r2_cv": 0.9054,
+  "permutation_p": 0.0033,
+  "validity_range_pct": [
+    0,
+    50.0
+  ],
+  "session_spread": {
+    "A": 10.22,
+    "B": 17.38,
+    "C": 16.95
+  },
+  "predictions": {
+    "A": {
+      "chicory_pct": 35.8,
+      "robusta_pct": 64.2,
+      "uncertainty": 7.5,
+      "Q_rel": 1.45,
+      "verdict": "inside the calibration range"
+    },
+    "B": {
+      "chicory_pct": 63.0,
+      "robusta_pct": null,
+      "uncertainty": 10.2,
+      "Q_rel": 3.05,
+      "verdict": "outside calibrated space AND above the 0-50% range -- treat as 'high chicory', not a number"
+    },
+    "C": {
+      "chicory_pct": 55.8,
+      "robusta_pct": null,
+      "uncertainty": 10.0,
+      "Q_rel": 3.06,
+      "verdict": "outside calibrated space AND above the 0-50% range -- treat as 'high chicory', not a number"
+    },
+    "RB100": {
+      "chicory_pct": 1.1,
+      "robusta_pct": 98.9,
+      "uncertainty": 5.4,
+      "Q_rel": 1.0,
+      "verdict": "inside the calibration range"
+    },
+    "CH100": {
+      "chicory_pct": 84.7,
+      "robusta_pct": null,
+      "uncertainty": 5.5,
+      "Q_rel": 2.96,
+      "verdict": "outside calibrated space AND above the 0-50% range -- treat as 'high chicory', not a number"
+    },
+    "AB100": {
+      "chicory_pct": -8.0,
+      "robusta_pct": 108.0,
+      "uncertainty": 5.2,
+      "Q_rel": 1.09,
+      "verdict": "extrapolation beyond 50%"
+    }
+  }
+}

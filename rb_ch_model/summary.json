@@ -1,0 +1,82 @@
+{
+  "model": "PLS, absorbance + offset removal",
+  "n_latent": 4,
+  "patches_per_unit": 8,
+  "trim_pct": 10,
+  "wl_range": [
+    1001.0,
+    2446.0
+  ],
+  "levels": [
+    0.0,
+    10.0,
+    20.0,
+    30.0,
+    40.0,
+    50.0
+  ],
+  "n_units": 284,
+  "n_plates": 18,
+  "rmsecv_unit": 2.59,
+  "rmsecv_plate": 1.66,
+  "rmsecv_stir": 2.85,
+  "r2_cv": 0.9766,
+  "session_bias": -1.7,
+  "permutation_p": 0.0033,
+  "validity_range": [
+    0,
+    50
+  ],
+  "predictions": {
+    "A": {
+      "chicory_pct": 44.1,
+      "robusta_pct": 55.9,
+      "uncertainty": 5.8,
+      "model_err": 2.6,
+      "stir": 1.2,
+      "config": 5.0,
+      "Q_rel": 1.68,
+      "verdict": "quantifiable"
+    },
+    "B": {
+      "chicory_pct": 64.3,
+      "robusta_pct": null,
+      "uncertainty": 21.3,
+      "model_err": 2.6,
+      "stir": 1.5,
+      "config": 21.1,
+      "Q_rel": 3.54,
+      "verdict": "beyond the 0-50 % range \u2014 detect, don't quantify"
+    },
+    "C": {
+      "chicory_pct": 59.7,
+      "robusta_pct": null,
+      "uncertainty": 22.4,
+      "model_err": 2.6,
+      "stir": 1.6,
+      "config": 22.2,
+      "Q_rel": 3.59,
+      "verdict": "beyond the 0-50 % range \u2014 detect, don't quantify"
+    },
+    "RB100": {
+      "chicory_pct": -0.1,
+      "robusta_pct": 100.1,
+      "uncertainty": 2.9,
+      "model_err": 2.6,
+      "stir": 1.4,
+      "config": 0.0,
+      "Q_rel": 1.0,
+      "verdict": "quantifiable"
+    },
+    "CH100": {
+      "chicory_pct": 92.6,
+      "robusta_pct": null,
+      "uncertainty": 4.2,
+      "model_err": 2.6,
+      "stir": 3.3,
+      "config": 0.0,
+      "Q_rel": 3.21,
+      "verdict": "beyond the 0-50 % range \u2014 detect, don't quantify"
+    }
+  }
+}

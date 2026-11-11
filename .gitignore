@@ -1,0 +1,20 @@
+# raw camera data stays out of git (several GB)
+*.img
+*.hyspex
+*_raw_rad_float32.hdr
+*_raw.hdr
+batch3_rad/
+arabica/
+arabica+robusta/
+
+# generated
+coffee_app/site/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.venv/
+
+# editor and office lock files
+.~lock*
+*#
+.DS_Store

@@ -1,0 +1,887 @@
+<title>Coffee Adulterant Detector</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caladea:wght@400;700&family=Carlito:ital,wght@0,400;0,700;1,400&display=swap">
+<style>
+/* Layout: animated intro (home) -> a blog-style read (coffee, adulterants, HSI, techniques) and a scan page.
+   White pages and cards; coffee browns as accents; a pale milk tint for alternating bands. */
+:root {
+  --bg: #ffffff; --surface: #ffffff; --tint: #fbf8f5; --tint-2: #f3ece5; --ink: #2a1a12; --muted: #6d5c50; --line: #ede6df; --track: #f2ece6;
+  --coffee: #5b3a24; --coffee-2: #8a5a36; --crema: #c9a27e; --on-coffee: #ffffff;
+  --metal: #ddd7d1; --metal-2: #a79d94; --wood: #9a6640; --wood-2: #6b4423; --glass: #eef5f8;
+  --ok: #2f6b45; --ok-bg: #e5f0e8; --warn: #8a5a00; --warn-bg: #f8edd6; --bad: #9b2f1f; --bad-bg: #f7e0db;
+  --s-robusta: #a84a12; --s-arabica: #0079a8; --s-chicory: #b98318;
+  --shadow: 0 10px 30px rgb(91 58 36 / .10);
+  --display: Cambria, Caladea, Georgia, "Times New Roman", serif;
+  --body: Calibri, Carlito, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #15100c; --surface: #1e1611; --tint: #211813; --tint-2: #2b2019; --ink: #f7f0e9; --muted: #bba997; --line: #3a2c22; --track: #2d2119;
+  --coffee: #ecd5bd; --coffee-2: #d2a679; --crema: #b98a5f; --on-coffee: #1a120d;
+  --metal: #8d847c; --metal-2: #6c645d; --wood: #8a5a36; --wood-2: #5e3c22; --glass: #2b3940;
+  --ok: #7cc296; --ok-bg: #1d2e23; --warn: #e3b45c; --warn-bg: #3a2c15; --bad: #f08a76; --bad-bg: #3d1d17;
+  --s-robusta: #cf733b; --s-arabica: #2a9bc4; --s-chicory: #b98a24; --shadow: 0 10px 30px rgb(0 0 0 / .35); color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #15100c; --surface: #1e1611; --tint: #211813; --tint-2: #2b2019; --ink: #f7f0e9; --muted: #bba997; --line: #3a2c22; --track: #2d2119;
+  --coffee: #ecd5bd; --coffee-2: #d2a679; --crema: #b98a5f; --on-coffee: #1a120d;
+  --metal: #8d847c; --metal-2: #6c645d; --wood: #8a5a36; --wood-2: #5e3c22; --glass: #2b3940;
+  --ok: #7cc296; --ok-bg: #1d2e23; --warn: #e3b45c; --warn-bg: #3a2c15; --bad: #f08a76; --bad-bg: #3d1d17;
+  --s-robusta: #cf733b; --s-arabica: #2a9bc4; --s-chicory: #b98a24; --shadow: 0 10px 30px rgb(0 0 0 / .35); color-scheme: dark; }
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.6; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--surface); }
+.wrap { max-width: 1160px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+h1, h2, h3 { font-family: var(--display); color: var(--coffee); text-wrap: balance; margin: 0; font-weight: 700; }
+h1 { font-size: clamp(2.3rem, 5.4vw, 3.9rem); line-height: 1.04; letter-spacing: -0.015em; }
+h2 { font-size: clamp(1.55rem, 2.8vw, 2.15rem); line-height: 1.15; }
+h3 { font-size: 1.15rem; line-height: 1.3; }
+p { margin: 0; }
+a { color: var(--coffee-2); }
+.eyebrow { font-size: .78rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+.muted { color: var(--muted); }
+.num { font-variant-numeric: tabular-nums; }
+.measure { max-width: 68ch; }
+
+/* buttons and their touch/hover motion */
+.btn { font: inherit; font-weight: 700; border-radius: 999px; padding: 12px 22px; border: 1.5px solid var(--coffee); background: var(--coffee);
+       color: var(--on-coffee); cursor: pointer; text-decoration: none; display: inline-flex; gap: 10px; align-items: center;
+       transition: transform .18s ease, box-shadow .18s ease, background .18s ease; }
+.btn:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+.btn:active { transform: translateY(0) scale(.97); }
+.btn.ghost { background: var(--surface); color: var(--coffee); }
+.btn svg { width: 18px; height: 18px; transition: transform .2s ease; }
+.btn:hover svg.arr { transform: translateX(4px); }
+.btn:hover svg.spin { transform: rotate(90deg); }
+.btn:focus-visible, .chip:focus-visible, summary:focus-visible, .nav a:focus-visible, .partnav button:focus-visible { outline: 3px solid var(--crema); outline-offset: 2px; }
+
+/* top bar */
+.topbar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 9; background: color-mix(in srgb, var(--surface) 94%, transparent);
+          backdrop-filter: blur(6px); border-bottom: 1px solid var(--line); }
+.topbar .wrap { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding-block: 10px; }
+.brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--coffee); font-family: var(--display); font-weight: 700; font-size: 1.15rem; }
+.brand svg { width: 26px; height: 26px; flex: none; transition: transform .35s cubic-bezier(.3,1.6,.5,1); }
+.brand:hover svg { transform: rotate(-25deg) scale(1.12); }
+.nav { display: flex; gap: 4px; flex-wrap: wrap; }
+.nav a { text-decoration: none; color: var(--muted); font-weight: 700; padding: 6px 13px; border-radius: 999px; font-size: .95rem; transition: background .18s, color .18s; }
+.nav a:hover { color: var(--coffee); background: var(--tint); }
+.nav a[aria-current="page"] { background: var(--tint-2); color: var(--coffee); }
+
+main { padding-block: 0 40px; }
+.view[hidden] { display: none !important; }
+.view { animation: viewIn .55s cubic-bezier(.2,.7,.2,1) both; }
+@keyframes viewIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+.band { background: var(--tint); border-block: 1px solid var(--line); }
+
+/* ---------------- home: falling coffee beans behind two buttons */
+.home { position: relative; min-height: 100vh; min-height: 100dvh; display: grid; place-items: center; overflow: hidden;
+        background: radial-gradient(circle at 50% 45%, var(--surface) 0%, var(--tint) 65%, var(--tint-2) 100%); }
+body.is-home .topbar, body.is-home #siteFooter { display: none; }
+body.is-home main { padding-block: 0; }
+.beans { position: absolute; inset: 0; pointer-events: none; }
+.bean { position: absolute; top: -14%; left: var(--x); width: var(--s); opacity: var(--o);
+        animation: beanfall var(--d) linear infinite; animation-delay: var(--delay); will-change: transform; }
+.bean svg { width: 100%; height: auto; display: block; animation: beanspin var(--r) linear infinite; animation-direction: var(--dir); }
+@keyframes beanfall { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(var(--dx), 130vh, 0); } }
+@keyframes beanspin { to { transform: rotate(360deg); } }
+.home-center { position: relative; z-index: 1; display: grid; gap: 30px; justify-items: center; text-align: center; padding: 24px; }
+.home-title { font-size: clamp(2.4rem, 6.2vw, 4.6rem); line-height: 1.05; letter-spacing: -0.015em; max-width: 14ch;
+              text-shadow: 0 0 24px var(--bg), 0 0 8px var(--bg); }
+.home-actions { display: flex; gap: 18px; flex-wrap: wrap; justify-content: center; }
+.btn.big { font-size: 1.15rem; padding: 16px 30px; box-shadow: var(--shadow); }
+.btn.ghost.big { background: color-mix(in srgb, var(--surface) 88%, transparent); backdrop-filter: blur(4px); }
+@media (prefers-reduced-motion: reduce) { .bean { top: var(--y); } }
+
+/* ---------------- learn: blog */
+.article-head { padding-block: 44px 22px; display: grid; gap: 14px; }
+.article-head .lede { font-size: 1.12rem; color: var(--muted); }
+.partnav { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 54px); z-index: 5; background: color-mix(in srgb, var(--bg) 94%, transparent);
+           backdrop-filter: blur(6px); padding-block: 10px; border-bottom: 1px solid var(--line); }
+.partnav .wrap { display: flex; gap: 8px; flex-wrap: wrap; }
+.partnav button { font: inherit; font-size: .92rem; font-weight: 700; border: 1px solid var(--line); background: var(--surface); color: var(--muted);
+                  border-radius: 999px; padding: 5px 14px; cursor: pointer; transition: all .18s; }
+.partnav button:hover { border-color: var(--crema); color: var(--coffee); transform: translateY(-1px); }
+.part { padding-block: 44px; display: grid; gap: 22px; scroll-margin-top: 110px; }
+.part-label { display: flex; gap: 12px; align-items: baseline; }
+.part-label .no { font-family: var(--display); font-size: 2.6rem; color: var(--crema); line-height: 1; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 22px; display: grid; gap: 14px; align-content: start; min-width: 0; }
+.lift { transition: transform .22s ease, box-shadow .22s ease; }
+.lift:hover { transform: translateY(-4px); box-shadow: var(--shadow); }
+.ingredients { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+.ing-ico { width: 46px; height: 46px; transition: transform .4s cubic-bezier(.3,1.6,.5,1); }
+.lift:hover .ing-ico { transform: rotate(-12deg) scale(1.1); }
+.latin { font-style: italic; color: var(--muted); font-size: .95rem; margin-top: -8px; }
+.props { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 4px 14px; margin: 0; font-size: .95rem; }
+.props dt { color: var(--muted); }
+.props dd { margin: 0; }
+.chipsrow { display: flex; flex-wrap: wrap; gap: 8px; }
+.pill { font-size: .9rem; padding: 5px 12px; border-radius: 999px; background: var(--tint-2); color: var(--ink); }
+.two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; }
+.tablewrap { overflow-x: auto; }
+table.t { width: 100%; border-collapse: collapse; font-size: .96rem; }
+table.t th, table.t td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+table.t thead th { font-size: .78rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+table.t tbody tr { transition: background .15s; }
+table.t tbody tr:hover { background: var(--tint); }
+table.t tbody th { font-weight: 700; color: var(--ink); }
+tr.mine { background: var(--tint-2); }
+.arrow { display: inline-block; min-width: 1.5em; font-weight: 700; }
+.up { color: var(--bad); } .down { color: var(--s-arabica); }
+.legal svg { width: 100%; height: auto; min-width: 520px; display: block; }
+.cube svg { width: 100%; max-width: 420px; height: auto; display: block; margin: 0 auto; }
+.cube .layer { transition: transform .45s cubic-bezier(.2,.8,.2,1); }
+.cube:hover .layer { transform: translate(calc(var(--i) * 6px), calc(var(--i) * -6px)); }
+.chart { width: 100%; overflow-x: auto; }
+.chart svg { width: 100%; min-width: 420px; height: auto; display: block; }
+.chartfig { margin: 0; position: relative; }
+.series-key { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: .85rem; color: var(--muted); }
+.series-key span { display: inline-flex; gap: 6px; align-items: center; }
+.series-key i { width: 16px; height: 0; border-top: 2px solid; display: inline-block; }
+.tip { position: absolute; pointer-events: none; background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 6px;
+       padding: 6px 9px; font-size: .82rem; box-shadow: 0 2px 8px rgb(0 0 0 / .12); white-space: nowrap; z-index: 2; font-variant-numeric: tabular-nums; }
+.sources { font-size: .9rem; color: var(--muted); display: grid; gap: 4px; margin: 0; padding-left: 1.1rem; }
+.endcta { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; justify-content: space-between; }
+
+/* ---------------- scan */
+.scanhead { padding-block: 40px 18px; display: grid; gap: 8px; }
+.drop { border: 2px dashed var(--crema); border-radius: 18px; padding: 34px 20px; display: grid; gap: 12px; justify-items: center; text-align: center;
+        background: var(--tint); transition: border-color .2s, background .2s, transform .2s; }
+.drop:hover { border-color: var(--coffee-2); }
+.drop.over { border-style: solid; border-color: var(--coffee); background: var(--tint-2); transform: scale(1.01); }
+.drop .big { font-family: var(--display); font-size: 1.45rem; color: var(--coffee); }
+.drop .upl { width: 54px; height: 54px; }
+.drop .upl .arrowgrp { transition: transform .3s ease; }
+.drop:hover .upl .arrowgrp, .drop.over .upl .arrowgrp { animation: bob .9s ease-in-out infinite; }
+@keyframes bob { 50% { transform: translateY(-5px); } }
+.filelist { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+.fileslot { font-size: .9rem; border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 4px 10px; color: var(--muted); transition: all .2s; }
+.fileslot.ok { border-color: var(--ok); color: var(--ok); background: var(--ok-bg); }
+input[type=file] { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.status { font-size: .95rem; display: flex; flex-wrap: wrap; gap: 6px 14px; color: var(--muted); }
+.status b { color: var(--ink); }
+.progress { height: 6px; background: var(--track); border-radius: 3px; overflow: hidden; }
+.progress > div { height: 100%; width: 0; background: var(--coffee-2); transition: width .15s; }
+.error { border-left: 4px solid var(--bad); background: var(--bad-bg); color: var(--ink); padding: 10px 14px; border-radius: 6px; }
+.empty { border: 1px dashed var(--line); border-radius: 16px; padding: 30px 20px; text-align: center; color: var(--muted); display: grid; gap: 8px; justify-items: center; }
+.empty svg { width: 40px; height: 40px; opacity: .8; }
+.scanbox { overflow-x: auto; border-radius: 12px; background: #000; }
+#scanCanvas { display: block; min-width: 720px; width: 100%; cursor: crosshair; }
+.hint { font-size: .92rem; color: var(--muted); }
+.reveal { animation: viewIn .45s cubic-bezier(.2,.7,.2,1) both; }
+.result-head { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: baseline; justify-content: space-between; }
+.type { font-family: var(--display); font-size: clamp(1.6rem, 3vw, 2.1rem); color: var(--ink); line-height: 1.15; }
+.conf { font-size: .9rem; padding: 3px 10px; border-radius: 999px; background: var(--track); color: var(--ink); font-weight: 700; }
+.comp { display: grid; gap: 10px; }
+.comp-row { display: grid; grid-template-columns: 9.5rem minmax(0, 1fr) 11rem; gap: 12px; align-items: center; }
+.comp-row .name { font-weight: 700; display: flex; gap: 8px; align-items: center; }
+.sw { width: 11px; height: 11px; border-radius: 2px; flex: none; }
+.bar { height: 14px; background: var(--track); border-radius: 0 4px 4px 0; position: relative; overflow: hidden; }
+.bar > i { position: absolute; inset: 0 auto 0 0; border-radius: 0 4px 4px 0; transition: width .6s cubic-bezier(.2,.8,.2,1); }
+.bar > em { position: absolute; top: 0; bottom: 0; background: color-mix(in srgb, var(--ink) 22%, transparent); }
+.val { text-align: right; font-variant-numeric: tabular-nums; font-size: 1.15rem; font-weight: 700; }
+.val small { font-size: .8rem; font-weight: 400; color: var(--muted); display: block; line-height: 1.2; }
+.notes { display: grid; gap: 8px; }
+.note { display: flex; gap: 10px; align-items: flex-start; padding: 9px 12px; border-radius: 8px; font-size: .95rem; }
+.note b.badge { flex: none; font-size: .7rem; letter-spacing: .07em; text-transform: uppercase; padding: 2px 7px; border-radius: 4px; margin-top: 2px; }
+.note.ok { background: var(--ok-bg); } .note.ok b.badge { background: var(--ok); color: var(--surface); }
+.note.warn { background: var(--warn-bg); } .note.warn b.badge { background: var(--warn); color: var(--surface); }
+.note.bad { background: var(--bad-bg); } .note.bad b.badge { background: var(--bad); color: var(--surface); }
+.panels { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 18px; }
+.panel { display: grid; gap: 10px; align-content: start; min-width: 0; }
+.panel figure { margin: 0; position: relative; }
+#mapCanvas { width: 100%; max-width: 360px; aspect-ratio: 1; display: block; border-radius: 10px; background: #000; }
+.legend { display: flex; gap: 8px; align-items: center; font-size: .82rem; color: var(--muted); flex-wrap: wrap; }
+.ramp { width: 160px; height: 10px; border-radius: 2px; }
+details { border-top: 1px solid var(--line); padding-top: 10px; }
+summary { cursor: pointer; font-weight: 700; color: var(--coffee); }
+dl.facts { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 4px 16px; margin: 10px 0 0; font-size: .93rem; }
+dl.facts dt { color: var(--muted); }
+dl.facts dd { margin: 0; font-variant-numeric: tabular-nums; min-width: 0; }
+.three { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+.list { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.list li { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px; align-items: start; font-size: .95rem; }
+.state { font-size: .7rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; padding: 2px 7px; border-radius: 4px; margin-top: 3px; }
+.state.ready { background: var(--ok-bg); color: var(--ok); }
+.state.soon { background: var(--track); color: var(--muted); }
+ol.steps { margin: 0; padding-left: 1.3rem; display: grid; gap: 8px; font-size: .95rem; }
+ol.steps li::marker { font-family: var(--display); color: var(--coffee-2); font-weight: 700; }
+.stack { display: grid; gap: 20px; padding-bottom: 20px; }
+footer { font-size: .85rem; color: var(--muted); border-top: 1px solid var(--line); padding-block: 16px 24px; margin-top: 30px; }
+
+@media (max-width: 900px) {
+  .panels, .three, .ingredients, .two { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 600px) {
+  .comp-row { grid-template-columns: 6.5rem minmax(0, 1fr) 7.5rem; }
+  .card { padding: 16px; }
+  .partnav { top: calc(env(safe-area-inset-top, 0px) + 88px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+  .spec-draw { stroke-dashoffset: 0; }
+}
+</style>
+
+<header class="topbar">
+  <div class="wrap">
+    <a class="brand" href="#home" aria-label="Coffee Adulterant Detector, home">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><ellipse cx="16" cy="16" rx="10" ry="14" transform="rotate(30 16 16)" fill="var(--coffee)"/>
+        <path d="M12 5.5 C 19 12, 13 20, 20 26.5" stroke="var(--surface)" stroke-width="2.2" fill="none" stroke-linecap="round"/></svg>
+      Coffee Adulterant Detector
+    </a>
+    <nav class="nav" aria-label="Pages">
+      <a href="#home" id="nav-home">Home</a>
+      <a href="#learn" id="nav-learn">Coffee &amp; HSI</a>
+      <a href="#scan" id="nav-scan">Scan</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <!-- =========================================================== HOME: falling beans + two buttons -->
+  <section class="view home" id="viewHome" aria-label="Coffee Adulterant Detector">
+    <div class="beans" id="beans" aria-hidden="true"></div>
+    <div class="home-center">
+      <h1 class="home-title">Coffee Adulterant Detector</h1>
+      <div class="home-actions">
+      <a class="btn big" href="#learn">Learn about coffee &amp; HSI
+        <svg class="arr" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h11M11 5l5 5-5 5" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+      <a class="btn ghost big" href="#scan">Scan a sample
+        <svg class="spin" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M10 1.5v3M10 15.5v3M1.5 10h3M15.5 10h3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></a>
+      </div>
+    </div>
+  </section>
+
+  <!-- =========================================================== LEARN (blog) -->
+  <section class="view" id="viewLearn" aria-label="Coffee, adulterants and hyperspectral imaging" hidden>
+    <div class="wrap article-head">
+      <span class="eyebrow">A short read · about 8 minutes</span>
+      <h1>What's in your coffee, and how a camera can tell</h1>
+      <p class="lede measure">Coffee powder looks the same whether it is pure arabica, cheap robusta or a third chicory. This page explains the ingredients, what mixing does to the cup, and how hyperspectral imaging reads the chemistry to tell them apart.</p>
+    </div>
+    <nav class="partnav" aria-label="Parts of this article">
+      <div class="wrap">
+        <button type="button" data-go="part1">1 · Coffee &amp; adulterants</button>
+        <button type="button" data-go="part2">2 · HSI &amp; the coffee spectrum</button>
+        <button type="button" data-go="part3">3 · Detection techniques</button>
+      </div>
+    </nav>
+
+    <!-- part 1 -->
+    <div class="wrap">
+      <section class="part" id="part1">
+        <div class="part-label"><span class="no">1</span><h2>Coffee and what gets mixed into it</h2></div>
+        <p class="measure">Ground coffee is rarely one thing. Most packs are a blend of two coffee species, and many South Indian filter coffees also contain roasted chicory root. Blends are legitimate when they are declared. They become adulteration when a cheaper ingredient is added without saying so, or in larger amounts than the label claims.</p>
+        <div class="ingredients">
+          <div class="card lift">
+            <svg class="ing-ico" viewBox="0 0 46 46" aria-hidden="true"><ellipse cx="23" cy="23" rx="13" ry="18" transform="rotate(25 23 23)" fill="var(--s-arabica)"/><path d="M17 9 C 27 18, 18 28, 28 37" stroke="var(--surface)" stroke-width="2.4" fill="none" stroke-linecap="round"/></svg>
+            <h3>Arabica</h3><p class="latin">Coffea arabica</p>
+            <p>The higher-grown, more delicate species. It makes a sweeter, more aromatic and more acidic cup, and sells for roughly twice the price of robusta.</p>
+            <dl class="props"><dt>Caffeine</dt><dd>about 1.2 %</dd><dt>Coffee oil</dt><dd>about 15–17 %</dd><dt>In the cup</dt><dd>sweet, fruity, bright acidity</dd></dl>
+          </div>
+          <div class="card lift">
+            <svg class="ing-ico" viewBox="0 0 46 46" aria-hidden="true"><ellipse cx="23" cy="23" rx="15" ry="17" transform="rotate(-20 23 23)" fill="var(--s-robusta)"/><path d="M16 10 C 26 18, 18 28, 30 36" stroke="var(--surface)" stroke-width="2.4" fill="none" stroke-linecap="round"/></svg>
+            <h3>Robusta</h3><p class="latin">Coffea canephora</p>
+            <p>A hardier, higher-yielding species grown at lower altitude, and most of India's coffee crop. It brings strength, bitterness and a thick crema.</p>
+            <dl class="props"><dt>Caffeine</dt><dd>about 2.2 %</dd><dt>Coffee oil</dt><dd>about 7–10 %</dd><dt>In the cup</dt><dd>strong, bitter, earthy</dd></dl>
+          </div>
+          <div class="card lift">
+            <svg class="ing-ico" viewBox="0 0 46 46" aria-hidden="true"><path d="M23 6 C 30 14, 29 26, 23 41 C 17 26, 16 14, 23 6 Z" fill="var(--s-chicory)"/><path d="M23 12 V36" stroke="var(--surface)" stroke-width="2" stroke-linecap="round"/><path d="M23 8 C 18 3, 12 4, 10 6 M23 8 C 28 3, 34 4, 36 6" stroke="var(--ok)" stroke-width="2.4" fill="none" stroke-linecap="round"/></svg>
+            <h3>Chicory</h3><p class="latin">Cichorium intybus, roasted root</p>
+            <p>Not coffee at all: the root of a plant related to dandelion, dried, roasted and ground. It is rich in inulin, a fibre that caramelises when roasted.</p>
+            <dl class="props"><dt>Caffeine</dt><dd>none</dd><dt>Coffee oil</dt><dd>very little</dd><dt>In the cup</dt><dd>dark, full-bodied, roasted bitterness</dd></dl>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Other adulterants reported in ground coffee</h3>
+          <p class="measure">Chicory and robusta are the common ones in India. Studies around the world also report cheaper fillers that roast to a coffee-like brown powder:</p>
+          <div class="chipsrow"><span class="pill">roasted barley</span><span class="pill">corn</span><span class="pill">wheat</span><span class="pill">soybean</span><span class="pill">coffee husks and sticks</span><span class="pill">date seeds</span><span class="pill">caramelised sugar</span></div>
+          <p class="muted" style="font-size:.92rem">Cereal fillers also carry a health risk: barley and wheat contain gluten, which is unsafe for people with coeliac disease when it is not declared.</p>
+        </div>
+
+        <div class="card">
+          <h3>How the adulterants change pure coffee</h3>
+          <div class="tablewrap">
+            <table class="t">
+              <thead><tr><th scope="col">Property</th><th scope="col">Adding chicory to coffee</th><th scope="col">Adding robusta to arabica</th></tr></thead>
+              <tbody>
+                <tr><th scope="row">Caffeine</th><td><span class="arrow down">↓</span>Diluted: chicory has none, so 30 % chicory means about 30 % less caffeine.</td><td><span class="arrow up">↑</span>Robusta has nearly twice the caffeine.</td></tr>
+                <tr><th scope="row">Aroma &amp; acidity</th><td><span class="arrow down">↓</span>Fewer coffee aroma compounds per cup; a flatter taste.</td><td><span class="arrow down">↓</span>Less of arabica's sweetness and bright acidity.</td></tr>
+                <tr><th scope="row">Body &amp; colour</th><td><span class="arrow up">↑</span>Darker, thicker brew from caramelised inulin; why filter coffee carries milk so well.</td><td><span class="arrow up">↑</span>Heavier body and more crema.</td></tr>
+                <tr><th scope="row">Bitterness</th><td><span class="arrow up">↑</span>Roasted, burnt-sugar bitterness.</td><td><span class="arrow up">↑</span>A harsher, more bitter cup.</td></tr>
+                <tr><th scope="row">Cost to the maker</th><td><span class="arrow down">↓</span>Chicory is much cheaper than coffee.</td><td><span class="arrow down">↓</span>Robusta costs about half as much as arabica.</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="muted" style="font-size:.92rem">The price gap is why both mixtures tempt fraud: a pack labelled "100 % arabica" or "pure coffee" can quietly carry the cheaper ingredient.</p>
+        </div>
+
+        <div class="card legal">
+          <h3>When a blend becomes adulteration</h3>
+          <p class="measure">In India, roasted coffee-chicory powder must contain <b>at least 51 % coffee</b>, so no more than 49 % chicory, and every pack must declare both percentages (IS 3802, FSSAI advisory of November 2021). When FSSAI checked 42 companies in 2021, only 13 complied with the labelling rules.</p>
+          <div class="tablewrap"><svg id="legalSvg" viewBox="0 0 760 112" role="img" aria-label="Chicory content from 0 to 100 percent: up to 49 percent is allowed if declared, above 49 percent is not allowed; the app is calibrated for 0 to 50 percent"></svg></div>
+        </div>
+      </section>
+    </div>
+
+    <!-- part 2 -->
+    <div class="band">
+      <div class="wrap">
+        <section class="part" id="part2">
+          <div class="part-label"><span class="no">2</span><h2>Seeing chemistry: hyperspectral imaging and the coffee spectrum</h2></div>
+          <div class="two">
+            <div style="display:grid;gap:12px;align-content:start" class="measure">
+              <h3>A camera that records a spectrum at every pixel</h3>
+              <p>An ordinary camera records three colours per pixel. A hyperspectral camera records hundreds of narrow wavelength bands, so every pixel carries its own <b>spectrum</b>: how much light the material reflects at each wavelength. Stacked together, the image becomes a <b>data cube</b> with two spatial dimensions and one spectral one.</p>
+              <p>This project uses a <b>HySpex SWIR-384</b>: 384 pixels across, 288 bands from about 950 to 2500 nm, in the short-wave infrared. It is a push-broom camera: it records one line at a time while the samples move underneath, building the image line by line.</p>
+              <p>A white <b>Spectralon</b> strip at the start of every scan reflects almost all light at every wavelength. Dividing each pixel by the white strip in the same column turns the raw signal into <b>reflectance</b>, which no longer depends on the lamps or the camera's sensitivity.</p>
+            </div>
+            <figure class="card cube" style="margin:0">
+              <svg viewBox="0 0 420 300" role="img" aria-label="A hyperspectral data cube: image layers for each wavelength, and the spectrum of one pixel drawn through them">
+                <g class="layer" style="--i:4"><rect x="150" y="30" width="190" height="130" rx="6" fill="var(--s-chicory)" opacity=".55"/></g>
+                <g class="layer" style="--i:3"><rect x="130" y="50" width="190" height="130" rx="6" fill="var(--crema)" opacity=".7"/></g>
+                <g class="layer" style="--i:2"><rect x="110" y="70" width="190" height="130" rx="6" fill="var(--coffee-2)" opacity=".75"/></g>
+                <g class="layer" style="--i:1"><rect x="90" y="90" width="190" height="130" rx="6" fill="var(--wood-2)" opacity=".85"/></g>
+                <g class="layer" style="--i:0"><rect x="70" y="110" width="190" height="130" rx="6" fill="var(--coffee)"/>
+                  <circle cx="120" cy="160" r="22" fill="var(--wood)"/><circle cx="196" cy="186" r="22" fill="var(--wood)"/>
+                  <rect x="112" y="152" width="14" height="14" fill="none" stroke="#ffffff" stroke-width="2"/></g>
+                <text x="165" y="262" text-anchor="middle" font-size="13" fill="var(--muted)">x, y: the image</text>
+                <text x="365" y="70" font-size="13" fill="var(--muted)">λ: 288 bands</text>
+                <path d="M350 80 L355 160" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#ah)"/>
+                <defs><marker id="ah" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="var(--muted)"/></marker></defs>
+              </svg>
+              <figcaption class="muted" style="font-size:.88rem;text-align:center">Each wavelength is one image layer. One pixel, read through all the layers, gives its spectrum. Hover to fan the layers out.</figcaption>
+            </figure>
+          </div>
+
+          <div class="card">
+            <h3>Why short-wave infrared sees chemistry</h3>
+            <p class="measure">Light between 1000 and 2500 nm makes chemical bonds vibrate. Each bond (C–H in oils, O–H in water and sugars, N–H in proteins and caffeine) absorbs at its own set of wavelengths, called overtones and combination bands. Where a compound absorbs, the reflectance dips. So the depth of a dip tracks how much of that compound is present, roughly in proportion once reflectance R is turned into absorbance, log₁₀(1/R). That proportionality is why simple straight-line models (PLSR) measure chicory so well.</p>
+            <div class="series-key" id="learnKey"></div>
+            <figure class="chart chartfig"><svg id="learnSvg" viewBox="0 0 640 300" role="img" aria-label="Reflectance spectra of pure robusta, pure arabica and pure chicory from 1000 to 2450 nanometres, with absorption bands marked"></svg><div class="tip" id="learnTip" hidden></div></figure>
+            <p class="muted" style="font-size:.9rem">Measured in this project (1 Sep scans). Hover the chart to read values at any wavelength.</p>
+          </div>
+
+          <div class="card">
+            <h3>The bands, and what they tell us about coffee</h3>
+            <div class="tablewrap">
+              <table class="t">
+                <thead><tr><th scope="col">Wavelength</th><th scope="col">Bond vibration</th><th scope="col">Compounds in coffee</th><th scope="col">What it tells us</th></tr></thead>
+                <tbody>
+                  <tr><th scope="row" class="num">≈ 1210 nm</th><td>C–H, second overtone</td><td>oils, sugars</td><td>general organic content; weak</td></tr>
+                  <tr><th scope="row" class="num">≈ 1450 nm</th><td>O–H, first overtone</td><td>water, sugars</td><td>moisture; changes from day to day</td></tr>
+                  <tr><th scope="row" class="num">≈ 1690 nm</th><td>C–H of aromatic and methyl groups, first overtone</td><td>caffeine, chlorogenic acids</td><td>slightly stronger in robusta</td></tr>
+                  <tr><th scope="row" class="num">1730, 1760 nm</th><td>C–H of CH₂ chains, first overtone</td><td>coffee oil (lipids)</td><td>strong in coffee, weak in chicory: the main chicory signal</td></tr>
+                  <tr><th scope="row" class="num">≈ 1940 nm</th><td>O–H, combination</td><td>water</td><td>moisture; too variable between days to rely on</td></tr>
+                  <tr><th scope="row" class="num">≈ 2100 nm</th><td>O–H + C–O, combination</td><td>carbohydrates: inulin sugars, cellulose</td><td>carbohydrate-rich materials such as chicory</td></tr>
+                  <tr><th scope="row" class="num">2180–2260 nm</th><td>N–H and C–H combinations</td><td>proteins, caffeine, phenolics</td><td>a robusta-richer region (assignment tentative)</td></tr>
+                  <tr><th scope="row" class="num">2310, 2350 nm</th><td>C–H, combination</td><td>coffee oil</td><td>the second oil band; large coffee–chicory contrast</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3>Why HSI is a good way to measure chicory</h3>
+            <ul class="list">
+              <li><span class="state ready">Chemistry</span><span><b>A strong, specific signal.</b> Coffee is oily and chicory is not: the 2310 nm oil band measures 0.095 in pure arabica, 0.085 in pure robusta and only 0.024 in pure chicory. Every percent of chicory makes the dips a little shallower.</span></li>
+              <li><span class="state ready">Pixels</span><span><b>Thousands of spectra per dish.</b> A single powder grain is either coffee or chicory, so one pixel says little. HSI averages 12 × 12-pixel patches (about 9 mm) across the whole dish, so the result reflects the bulk blend, not one grain.</span></li>
+              <li><span class="state ready">Maps</span><span><b>It shows where, not just how much.</b> Because every patch gets its own value, the app can map chicory across a dish and show whether a blend is evenly mixed.</span></li>
+              <li><span class="state ready">Practical</span><span><b>Fast and non-destructive.</b> No chemicals and no extraction; a dish is scanned in seconds and can be measured again.</span></li>
+              <li><span class="state ready">Tested</span><span><b>About 1 % error on unseen days.</b> In this project the models were tested on whole scanning sessions they never saw, the strictest test the data allows.</span></li>
+              <li><span class="state soon">Limits</span><span><b>Arabica and robusta differ far less.</b> Their spectra are close (a little more oil in arabica, more caffeine and phenolics in robusta), so the arabica : robusta split is much harder than chicory. Each calibration also belongs to its camera and lamp setup.</span></li>
+            </ul>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <!-- part 3 -->
+    <div class="wrap">
+      <section class="part" id="part3">
+        <div class="part-label"><span class="no">3</span><h2>How coffee adulteration is detected</h2></div>
+        <p class="measure">Food laboratories use several families of methods. They trade speed against detail, and most destroy the sample. Hyperspectral imaging sits at the fast, non-destructive end, with the extra ability to map the sample.</p>
+        <div class="card">
+          <div class="tablewrap">
+            <table class="t">
+              <thead><tr><th scope="col">Technique</th><th scope="col">What it looks at</th><th scope="col">Speed</th><th scope="col">Sample destroyed?</th><th scope="col">Map of the sample?</th><th scope="col">Typical use</th></tr></thead>
+              <tbody>
+                <tr><th scope="row">Microscopy</th><td>particle shapes and plant cell structures</td><td>minutes</td><td>no</td><td>no</td><td>quick screening by an expert; qualitative</td></tr>
+                <tr><th scope="row">Chromatography (HPLC)</th><td>sugar profile, e.g. glucose, xylose, fructose</td><td>hours (extraction)</td><td>yes</td><td>no</td><td>reference laboratory method</td></tr>
+                <tr><th scope="row">DNA (real-time PCR)</th><td>species-specific DNA</td><td>hours</td><td>yes</td><td>no</td><td>species identity; roasting damages DNA</td></tr>
+                <tr><th scope="row">NMR spectroscopy</th><td>molecular fingerprints, e.g. 16-O-methylcafestol for robusta</td><td>minutes to hours</td><td>yes (extraction)</td><td>no</td><td>robusta in arabica; costly instrument</td></tr>
+                <tr><th scope="row">NIR / FTIR spectroscopy</th><td>an average spectrum of one spot</td><td>seconds</td><td>no</td><td>no</td><td>rapid screening once calibrated</td></tr>
+                <tr class="mine"><th scope="row">Hyperspectral imaging (this app)</th><td>a spectrum at every pixel</td><td>seconds per scan</td><td>no</td><td><b>yes</b></td><td>measuring and mapping blends</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card" style="background:var(--tint)">
+          <h3>Sources</h3>
+          <ul class="sources">
+            <li><a href="https://mail.fssai.gov.in/upload/advisories/2021/11/6195ef50cb7b3Letter_Compliance_Coffee_Chicory_18_11_2021.pdf" target="_blank" rel="noopener">FSSAI: compliance with respect to coffee-chicory mixtures (Nov 2021)</a></li>
+            <li><a href="https://foodsafetyhelpline.com/fssai-compliance/chicory-coffee-chicory-mixture-and-how-it-has-been-discussed-under-fssr/" target="_blank" rel="noopener">Chicory and coffee-chicory mixture under FSSR and IS 3802</a></li>
+            <li><a href="https://krishijagran.com/agriculture-world/fssai-found-only-13-out-of-42-companies-complying-with-coffee-coffee-chicory-mixture-labelling-norms" target="_blank" rel="noopener">Krishi Jagran: FSSAI found 13 of 42 companies compliant</a></li>
+            <li><a href="https://www.sciencegate.app/document/10.1093/jaocint/qsz019" target="_blank" rel="noopener">Review of analytical methods to detect adulteration in coffee (J. AOAC Int., 2020)</a></li>
+            <li><a href="https://www.gov.uk/government/news/review-of-methods-for-coffee-bean-authenticity-testing" target="_blank" rel="noopener">UK government: review of methods for coffee bean authenticity testing</a></li>
+            <li><a href="https://link.springer.com/article/10.1007/s12161-019-01502-x" target="_blank" rel="noopener">Forchetti &amp; Poppi 2020: adulterants in roasted coffee by NIR hyperspectral imaging</a></li>
+            <li><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9562924/" target="_blank" rel="noopener">Sahachairungrueng et al., Foods 2022: robusta in arabica by NIR hyperspectral imaging</a></li>
+            <li><a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5859211/" target="_blank" rel="noopener">Hyperspectral imaging of single green coffee beans: lipid content of arabica and robusta</a></li>
+            <li><a href="https://www.nature.com/articles/s41598-026-60975-z" target="_blank" rel="noopener">Scientific Reports 2026: roasted barley, date seeds and soybean in ground arabica</a></li>
+          </ul>
+          <p class="muted" style="font-size:.85rem">Caffeine and oil figures are typical literature values for green beans; individual lots vary. Band depths are this project's measurements.</p>
+        </div>
+
+        <div class="card endcta">
+          <div><h3>Ready to try it on your own scan?</h3><p class="muted">Load a .hdr and .hyspex (or .img) pair and pick a dish.</p></div>
+          <a class="btn" href="#scan">Scan a sample
+            <svg class="arr" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h11M11 5l5 5-5 5" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+        </div>
+      </section>
+    </div>
+  </section>
+
+  <!-- =========================================================== SCAN -->
+  <section class="view" id="viewScan" aria-label="Scan a sample" hidden>
+    <div class="wrap">
+      <div class="scanhead">
+        <span class="eyebrow">Scan a sample</span>
+        <h1 style="font-size:clamp(2rem,4vw,2.8rem)">Analyse your scan</h1>
+        <p class="muted measure">Add the scan's two files. The app reads them in your browser, finds the white strip and every petri dish, and analyses the dish you click.</p>
+      </div>
+      <div class="stack">
+        <div class="drop" id="drop">
+          <svg class="upl" viewBox="0 0 54 54" aria-hidden="true"><g class="arrowgrp"><path d="M27 34V12M18 21l9-9 9 9" stroke="var(--coffee)" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g><path d="M10 34v7a3 3 0 0 0 3 3h28a3 3 0 0 0 3-3v-7" stroke="var(--coffee-2)" stroke-width="3" fill="none" stroke-linecap="round"/></svg>
+          <span class="big">Drop your .hdr and .hyspex files here</span>
+          <span class="muted">The ENVI header (.hdr) and its data file: raw camera counts (.hyspex) or radiance (.img). Both at once, or one after the other.</span>
+          <div class="filelist"><span class="fileslot" id="slotHdr">.hdr: not added</span><span class="fileslot" id="slotData">.hyspex / .img: not added</span></div>
+          <label class="btn" for="fileInput">Choose files</label>
+          <input id="fileInput" type="file" multiple accept=".hdr,.hyspex,.img,.raw,.dat,.bin,.rad,.bil">
+          <span class="muted" style="font-size:.85rem">Read inside your browser; nothing is uploaded.</span>
+        </div>
+        <div id="errorBox" class="error" hidden></div>
+        <div class="status" id="status"></div>
+        <div class="progress" id="progress" hidden><div></div></div>
+
+        <div class="empty" id="emptyState">
+          <svg viewBox="0 0 40 40" aria-hidden="true"><ellipse cx="20" cy="26" rx="15" ry="5" fill="none" stroke="var(--muted)" stroke-width="2"/><ellipse cx="20" cy="25" rx="10" ry="2.5" fill="var(--crema)"/><path d="M20 6v10M15 11l5 5 5-5" stroke="var(--muted)" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <b>No scan loaded yet</b>
+          <span>Once you add the files, your scan and its dishes will appear here, and the results of the dish you click below it.</span>
+        </div>
+
+        <section class="card reveal" id="scanCard" hidden aria-labelledby="scanTitle">
+          <div class="row" style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:baseline">
+            <h2 id="scanTitle">Your scan</h2><span class="eyebrow">Click a dish</span>
+          </div>
+          <div class="scanbox"><canvas id="scanCanvas" height="180" aria-label="Scan with the white reference strip at the left and numbered petri dishes"></canvas></div>
+          <p class="hint" id="hint">Click a dish to analyse it. The white reference strip sits at the left end of the scan.</p>
+        </section>
+
+        <section class="card reveal" id="resultCard" hidden aria-labelledby="resTitle">
+          <div class="row" style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:baseline">
+            <h2 id="resTitle">Result</h2><span class="eyebrow" id="resDish"></span>
+          </div>
+          <div class="result-head">
+            <div style="display:grid;gap:4px;min-width:0">
+              <span class="eyebrow">Mixture type</span>
+              <span class="type" id="resType">—</span>
+            </div>
+            <span class="conf num" id="resConf"></span>
+          </div>
+          <div class="comp" id="comp"></div>
+          <div class="notes" id="notes"></div>
+          <div class="panels">
+            <div class="panel">
+              <h3 id="mapTitle">Chicory across the dish</h3>
+              <figure>
+                <canvas id="mapCanvas" width="360" height="360" aria-label="Map of the predicted chicory per block of patches"></canvas>
+                <div class="tip" id="mapTip" hidden></div>
+              </figure>
+              <div class="legend"><span class="num">0 %</span><canvas class="ramp" id="rampCanvas" width="160" height="10"></canvas><span class="num">50 %</span></div>
+              <p class="muted" id="spreadText" style="font-size:.9rem"></p>
+            </div>
+            <div class="panel">
+              <h3>Mean spectrum of the dish</h3>
+              <div class="series-key" id="seriesKey"></div>
+              <figure class="chart chartfig"><svg id="specSvg" viewBox="0 0 640 300" role="img" aria-label="Reflectance spectrum of the dish compared with pure robusta, pure arabica and pure chicory"></svg>
+                <div class="tip" id="specTip" hidden></div></figure>
+              <p class="muted" style="font-size:.88rem">Coffee oil absorbs at 1730 and 2310 nm. Chicory has little oil, so these dips get shallower as chicory goes up.</p>
+            </div>
+          </div>
+          <details>
+            <summary>Measurement details</summary>
+            <dl class="facts" id="facts"></dl>
+          </details>
+        </section>
+
+        <section class="three" aria-label="About the models">
+          <div class="card">
+            <h3>Mixtures it can tell apart</h3>
+            <ul class="list">
+              <li><span class="state ready">Ready</span><span><b>Robusta + chicory.</b> PLSR, 6 components. Error on unseen sessions about 0.9 % chicory.</span></li>
+              <li><span class="state ready">Ready</span><span><b>Arabica + chicory.</b> EMSC + PLSR, 4 components. Error on unseen sessions about 1.0 % chicory.</span></li>
+              <li><span class="state ready">Ready</span><span><b>Arabica + robusta + chicory.</b> First derivative + PLSR on 1650–1800 and 2150–2400 nm. Error about 0.9 % chicory. The arabica : robusta split is not measured.</span></li>
+              <li><span class="state ready">Ready</span><span><b>No chicory</b> (pure robusta, pure arabica, or an arabica + robusta blend) below the detection limit of about 2 %.</span></li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>How a dish is analysed</h3>
+            <ol class="steps">
+              <li>Raw camera counts lose their dark signal, taken from the file's own header.</li>
+              <li>Each pixel is divided by the Spectralon strip in the same column, giving reflectance.</li>
+              <li>The dish is found by its rim; rim, shadow and glare pixels are removed.</li>
+              <li>The powder is cut into 12 × 12 px patches (about 9 mm), turned into absorbance, and the least typical 10 % are dropped.</li>
+              <li>A classifier (PCA-LDA, 95 % correct on unseen days) picks the mixture; that mixture's model gives the chicory %.</li>
+            </ol>
+          </div>
+          <div class="card">
+            <h3>Limits</h3>
+            <ul class="list">
+              <li><span class="state soon">Range</span><span>Calibrated for 0–50 % chicory, matching the 49 % legal limit. Higher values are extrapolations.</span></li>
+              <li><span class="state soon">Setup</span><span>Trained on 99 dishes scanned on four days (1, 4, 7 and 8 Sep) with one HySpex SWIR-384, one lamp setup and one source of each ingredient.</span></li>
+              <li><span class="state soon">Blends</span><span>The arabica + robusta + chicory model assumes those blends hold chicory at the stated level; the lab notes should confirm it.</span></li>
+              <li><span class="state soon">Strip</span><span>Every scan needs the white Spectralon strip at its start.</span></li>
+            </ul>
+          </div>
+        </section>
+      </div>
+    </div>
+  </section>
+
+  <div class="wrap" id="siteFooter"><footer>Coffee Adulterant Detector · NIT Calicut · SWIR hyperspectral quantification of chicory in coffee. Models from the project notebooks (nested leave-one-session-out validation); the in-browser analysis reproduces the Python dish predictions to within 0.5 % chicory.</footer></div>
+</main>
+
+<script src="core.js"></script>
+<script src="models.js"></script>
+<script>
+(() => {
+  "use strict";
+  const $ = (id) => document.getElementById(id);
+  const models = CoffeeCore.prepareModels(window.COFFEE_MODELS);
+  const REF = models.references, WL = models.wavelengths;
+  const RAMP = ["#f6e7cc", "#e6c38f", "#c99252", "#93592a", "#4a2512"];
+  const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+  let S = null, pending = {};
+
+  const fmt = (x, d = 1) => (Number.isFinite(x) ? x.toFixed(d) : "–");
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  function rampColor(v) {
+    const t = Math.max(0, Math.min(1, v / 50)) * (RAMP.length - 1), i = Math.min(RAMP.length - 2, Math.floor(t)), f = t - i;
+    const a = RAMP[i], b = RAMP[i + 1], h = (s, k) => parseInt(s.slice(1 + 2 * k, 3 + 2 * k), 16);
+    return `rgb(${[0, 1, 2].map((k) => Math.round(h(a, k) + (h(b, k) - h(a, k)) * f)).join(",")})`;
+  }
+  function showError(msg) { const e = $("errorBox"); e.textContent = msg; e.hidden = !msg; }
+  function setProgress(p, label) {
+    const box = $("progress"); box.hidden = p === null; if (p !== null) box.firstElementChild.style.width = `${Math.round(p * 100)}%`;
+    if (label) $("hint").textContent = label;
+  }
+  function setStatus(parts) { $("status").innerHTML = parts.map((p) => `<span>${p}</span>`).join(""); }
+
+  // ---------------------------------------------------------------- pages
+  const ROUTES = ["home", "learn", "scan"];
+  function route() {
+    const h = (location.hash || "#home").slice(1), v = ROUTES.includes(h) ? h : "home";
+    $("viewHome").hidden = v !== "home"; $("viewLearn").hidden = v !== "learn"; $("viewScan").hidden = v !== "scan";
+    document.body.classList.toggle("is-home", v === "home");
+    for (const k of ROUTES) { const a = $(`nav-${k}`); if (k === v) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); }
+    if (v === "learn") { drawLegal(); drawLearnChart(); }
+    if (v === "scan") { drawScan(); if (S && S.selected !== null) renderResult(S.selected); }
+  }
+  window.addEventListener("hashchange", () => { route(); window.scrollTo(0, 0); });
+  document.querySelectorAll(".partnav button").forEach((b) => b.addEventListener("click", () => $(b.dataset.go).scrollIntoView({ behavior: "smooth", block: "start" })));
+
+  // ---------------------------------------------------------------- home: falling beans (seeded, so the layout is stable)
+  (function makeBeans() {
+    let seed = 7; const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+    const fills = ["var(--coffee)", "var(--wood)", "var(--wood-2)", "var(--coffee-2)"];
+    let html = "";
+    for (let i = 0; i < 28; i++) {
+      const size = 18 + rnd() * 40, dur = 10 + rnd() * 14, fill = fills[Math.floor(rnd() * fills.length)];
+      html += `<span class="bean" style="--x:${(rnd() * 100).toFixed(1)}%;--y:${(rnd() * 90).toFixed(1)}%;--s:${size.toFixed(0)}px;` +
+              `--o:${(0.35 + rnd() * 0.55).toFixed(2)};--d:${dur.toFixed(1)}s;--delay:${(-rnd() * dur).toFixed(1)}s;` +
+              `--dx:${((rnd() - 0.5) * 120).toFixed(0)}px;--r:${(5 + rnd() * 10).toFixed(1)}s;--dir:${rnd() < 0.5 ? "normal" : "reverse"}">` +
+              `<svg viewBox="0 0 40 52"><ellipse cx="20" cy="26" rx="17" ry="24" fill="${fill}"/>` +
+              `<path d="M15 5 C 27 18, 13 34, 25 47" stroke="rgba(255,244,232,.75)" stroke-width="3" fill="none" stroke-linecap="round"/></svg></span>`;
+    }
+    $("beans").innerHTML = html;
+  })();
+
+  // ---------------------------------------------------------------- learn: legal scale
+  function drawLegal() {
+    const x0 = 30, x1 = 730, X = (p) => x0 + (p / 100) * (x1 - x0);
+    let g = `<rect x="${X(0)}" y="34" width="${X(49) - X(0)}" height="26" fill="var(--ok-bg)"/>
+             <rect x="${X(49)}" y="34" width="${X(100) - X(49)}" height="26" fill="var(--bad-bg)"/>
+             <line x1="${X(49)}" x2="${X(49)}" y1="26" y2="68" stroke="var(--bad)" stroke-width="2"/>
+             <text x="${X(24.5)}" y="51" text-anchor="middle" font-size="13" font-weight="700" fill="var(--ok)">allowed if declared on the pack</text>
+             <text x="${X(74.5)}" y="51" text-anchor="middle" font-size="13" font-weight="700" fill="var(--bad)">not allowed</text>
+             <text x="${X(49)}" y="18" text-anchor="middle" font-size="12" fill="var(--ink)">49 % limit</text>`;
+    for (let p = 0; p <= 100; p += 10) g += `<line x1="${X(p)}" x2="${X(p)}" y1="60" y2="66" stroke="var(--muted)"/><text x="${X(p)}" y="80" text-anchor="middle" font-size="11" fill="var(--muted)">${p}</text>`;
+    g += `<path d="M${X(0)} 92 v6 H${X(50)} v-6" fill="none" stroke="var(--coffee)" stroke-width="2"/>
+          <text x="${X(25)}" y="110" text-anchor="middle" font-size="12" fill="var(--coffee)">range the app is calibrated for (0–50 %)</text>
+          <text x="${X(100)}" y="106" text-anchor="end" font-size="11.5" fill="var(--muted)">chicory in the blend (%)</text>`;
+    $("legalSvg").innerHTML = g;
+  }
+
+  // ---------------------------------------------------------------- spectrum chart (shared)
+  function spectrumChart(svg, keyEl, tip, series, bands) {
+    const W = 640, H = 300, m = { l: 46, r: 92, t: 14, b: 38 }, x0 = 950, x1 = 2520;
+    const all = series.flatMap((s) => s.vals).filter(Number.isFinite);
+    const yMax = Math.ceil(Math.max(...all) * 10) / 10, yMin = Math.max(0, Math.floor(Math.min(...all) * 10) / 10);
+    const X = (w) => m.l + ((w - x0) / (x1 - x0)) * (W - m.l - m.r), Y = (v) => H - m.b - ((v - yMin) / (yMax - yMin)) * (H - m.t - m.b);
+    let g = "";
+    for (let v = yMin; v <= yMax + 1e-9; v += 0.1) g += `<line x1="${m.l}" x2="${W - m.r}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)" stroke-width="1"/>
+      <text x="${m.l - 8}" y="${Y(v) + 4}" text-anchor="end" font-size="11" fill="var(--muted)">${v.toFixed(1)}</text>`;
+    for (let w = 1000; w <= 2500; w += 250) g += `<text x="${X(w)}" y="${H - m.b + 16}" text-anchor="middle" font-size="11" fill="var(--muted)">${w}</text>`;
+    bands.forEach(([w, t], i) => {
+      g += `<line x1="${X(w)}" x2="${X(w)}" y1="${m.t}" y2="${H - m.b}" stroke="var(--muted)" stroke-dasharray="2 4" stroke-width="1"/>
+            <text x="${X(w) + 4}" y="${m.t + 10 + (i % 3) * 12}" font-size="10.5" fill="var(--muted)">${t}</text>`;
+    });
+    g += `<text x="${(m.l + W - m.r) / 2}" y="${H - 6}" text-anchor="middle" font-size="11.5" fill="var(--muted)">wavelength (nm)</text>
+          <text transform="translate(12 ${(m.t + H - m.b) / 2}) rotate(-90)" text-anchor="middle" font-size="11.5" fill="var(--muted)">reflectance</text>`;
+    const labels = [];
+    for (const s of series.slice().reverse()) {
+      let d = "";
+      s.vals.forEach((v, k) => { if (WL[k] < x0 || WL[k] > x1 || !Number.isFinite(v)) return; d += `${d ? "L" : "M"}${X(WL[k]).toFixed(1)},${Y(v).toFixed(1)}`; });
+      g += `<path d="${d}" fill="none" stroke="${s.color}" stroke-width="${s.width}" stroke-linejoin="round"/>`;
+      const kEnd = WL.findIndex((w) => w > 2445); labels.push({ y: Y(s.vals[kEnd]), s });
+    }
+    labels.sort((a, b) => a.y - b.y); for (let k = 1; k < labels.length; k++) labels[k].y = Math.max(labels[k].y, labels[k - 1].y + 13);
+    for (const lb of labels) g += `<text x="${W - m.r + 6}" y="${lb.y + 4}" font-size="11" fill="var(--ink)">${lb.s.name}</text>`;
+    g += `<line class="cross" x1="0" x2="0" y1="${m.t}" y2="${H - m.b}" stroke="var(--muted)" stroke-width="1" visibility="hidden"/>
+          <rect class="hit" x="${m.l}" y="${m.t}" width="${W - m.l - m.r}" height="${H - m.t - m.b}" fill="transparent"/>`;
+    svg.innerHTML = g;
+    keyEl.innerHTML = series.map((s) => `<span><i style="border-color:${s.color};border-top-width:${s.width}px"></i>${s.name}</span>`).join("");
+    const hit = svg.querySelector(".hit"), cross = svg.querySelector(".cross");
+    hit.addEventListener("mousemove", (e) => {
+      const r = svg.getBoundingClientRect(), sx = W / r.width, px = (e.clientX - r.left) * sx;
+      const wl = x0 + ((px - m.l) / (W - m.l - m.r)) * (x1 - x0);
+      let k = 0; for (let j = 1; j < WL.length; j++) if (Math.abs(WL[j] - wl) < Math.abs(WL[k] - wl)) k = j;
+      cross.setAttribute("x1", X(WL[k])); cross.setAttribute("x2", X(WL[k])); cross.setAttribute("visibility", "visible");
+      tip.hidden = false;
+      tip.innerHTML = `<b>${WL[k].toFixed(0)} nm</b><br>` + series.map((s) => `<span style="color:${s.color}">■</span> ${s.name}: ${fmt(s.vals[k], 3)}`).join("<br>");
+      tip.style.left = `${Math.min(r.width - 190, (X(WL[k]) / sx) + 12)}px`; tip.style.top = "8px";
+    });
+    hit.addEventListener("mouseleave", () => { cross.setAttribute("visibility", "hidden"); tip.hidden = true; });
+  }
+  const pureSeries = () => [
+    { name: "Pure robusta", vals: REF.RB100, color: css("--s-robusta"), width: 1.8 },
+    { name: "Pure arabica", vals: REF.AB100, color: css("--s-arabica"), width: 1.8 },
+    { name: "Pure chicory", vals: REF.CH100, color: css("--s-chicory"), width: 1.8 },
+  ];
+  function drawLearnChart() {
+    spectrumChart($("learnSvg"), $("learnKey"), $("learnTip"), pureSeries(),
+                  [[1210, "C–H"], [1450, "water"], [1690, "caffeine"], [1730, "oil"], [1940, "water"], [2100, "carbs"], [2230, "N–H"], [2310, "oil"]]);
+  }
+
+  // ---------------------------------------------------------------- loading files
+  $("fileInput").addEventListener("change", (e) => { addFiles([...e.target.files]); e.target.value = ""; });
+  const drop = $("drop");
+  ["dragenter", "dragover"].forEach((t) => drop.addEventListener(t, (e) => { e.preventDefault(); drop.classList.add("over"); }));
+  ["dragleave", "drop"].forEach((t) => drop.addEventListener(t, (e) => { e.preventDefault(); drop.classList.remove("over"); }));
+  drop.addEventListener("drop", (e) => addFiles([...e.dataTransfer.files]));
+
+  function showSlots(h, d) {
+    const sh = $("slotHdr"), sd = $("slotData");
+    sh.textContent = h ? `.hdr: ${h.name}` : ".hdr: not added"; sh.classList.toggle("ok", !!h);
+    sd.textContent = d ? `data: ${d.name}` : ".hyspex / .img: not added"; sd.classList.toggle("ok", !!d);
+  }
+  function addFiles(files) {
+    showError("");
+    for (const f of files) { if (/\.hdr$/i.test(f.name)) pending.hdr = f; else pending.data = f; }
+    showSlots(pending.hdr, pending.data);
+    if (pending.hdr && pending.data) { const p = pending; pending = {}; openFiles(p.hdr, p.data); }
+    else if (pending.hdr) setStatus([`<b>${esc(pending.hdr.name)}</b> added. Now add its data file (.hyspex or .img).`]);
+    else if (pending.data) setStatus([`<b>${esc(pending.data.name)}</b> added. Now add its .hdr header file.`]);
+  }
+
+  async function openFiles(hdrFile, dataFile) {
+    showSlots(hdrFile, dataFile);
+    $("resultCard").hidden = true;
+    try {
+      const stem = (n) => n.replace(/\.[^.]+$/, "");
+      const src = { read: (a, b) => dataFile.slice(a, b).arrayBuffer() };
+      const scan = await CoffeeCore.openScan(await hdrFile.text(), src, dataFile.size, dataFile.name, models);
+      setStatus([`<b>${esc(dataFile.name)}</b>`, `<span class="num">${scan.L} lines × ${scan.S} px × ${scan.B} bands</span>`,
+                 scan.raw ? `raw camera counts (dark level <span class="num">${Math.round(scan.bgMedian)}</span>)` : "radiance file"]
+                .concat(stem(hdrFile.name) !== stem(dataFile.name) ? ["<b>Note:</b> the two file names differ; make sure they are the same scan"] : []));
+      setProgress(0, "Reading the scan…");
+      const br = await CoffeeCore.brightnessImage(scan, (p) => setProgress(p * 0.8, `Reading the scan… ${Math.round(p * 100)} %`));
+      const strip = CoffeeCore.findStrip(br, scan.L, scan.S);
+      setProgress(0.82, "Finding the dishes…");
+      await new Promise((r) => setTimeout(r, 20));
+      const dishes = CoffeeCore.findDishes(br, scan.L, scan.S, strip.s1);
+      if (!dishes.length) throw new Error("No petri dishes were found below the white strip. The app looks for round dishes about 15 cm across in the scan.");
+      setProgress(0.88, "Measuring the white reference…");
+      const white = await CoffeeCore.buildWhite(scan, strip, models.pipeline, (p) => setProgress(0.88 + 0.12 * p));
+      S = { scan, br, L: scan.L, Sx: scan.S, strip, dishes, white, results: dishes.map(() => null), selected: null };
+      S.image = grayImage(br, scan.L, scan.S); S.imgScale = 1;
+      setStatus([`<b>${esc(dataFile.name)}</b>`, `<span class="num">${scan.L} lines × ${scan.S} px × ${scan.B} bands</span>`,
+                 scan.raw ? `raw camera counts (dark level <span class="num">${Math.round(scan.bgMedian)}</span>)` : "radiance file",
+                 `${dishes.length} dish${dishes.length > 1 ? "es" : ""} found`]);
+      $("emptyState").hidden = true; $("scanCard").hidden = false;
+      setProgress(null, "Click a dish to analyse it.");
+      drawScan();
+      if (dishes.length === 1) selectDish(0);
+    } catch (err) {
+      setProgress(null, "Click a dish to analyse it."); showError(err.message || String(err)); console.error(err);
+    }
+  }
+
+  function grayImage(br, L, Sx) {
+    const sample = []; for (let k = 0; k < br.length; k += 37) sample.push(br[k]);
+    const lo = CoffeeCore.percentile(sample, 1), hi = CoffeeCore.percentile(sample, 99.5);
+    const c = document.createElement("canvas"); c.width = L; c.height = Sx;
+    const ctx = c.getContext("2d"), im = ctx.createImageData(L, Sx);
+    for (let l = 0; l < L; l++) for (let s = 0; s < Sx; s++) {
+      const v = br[l * Sx + s], g = Number.isFinite(v) ? Math.max(0, Math.min(255, Math.round(((v - lo) / (hi - lo)) * 255))) : 0, o = 4 * (s * L + l);
+      im.data[o] = im.data[o + 1] = im.data[o + 2] = g; im.data[o + 3] = 255;
+    }
+    ctx.putImageData(im, 0, 0); return c;
+  }
+
+  // ---------------------------------------------------------------- scan strip
+  const scanCanvas = $("scanCanvas");
+  function scanGeom() { const w = Math.max(720, scanCanvas.parentElement.clientWidth), k = w / S.L; return { w, h: Math.round(S.Sx * k), k }; }
+  function drawScan() {
+    if (!S || $("viewScan").hidden || $("scanCard").hidden) return;
+    const { w, h, k } = scanGeom(), dpr = window.devicePixelRatio || 1;
+    scanCanvas.width = Math.round(w * dpr); scanCanvas.height = Math.round(h * dpr); scanCanvas.style.height = `${h}px`;
+    const ctx = scanCanvas.getContext("2d");
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.imageSmoothingEnabled = true;
+    ctx.drawImage(S.image, 0, 0, w, h);
+    const gold = "#e0b872";
+    ctx.setLineDash([5, 4]); ctx.strokeStyle = "rgba(255,255,255,.75)"; ctx.lineWidth = 1.2;
+    ctx.strokeRect(S.strip.s0 * k, 2, (S.strip.s1 - S.strip.s0) * k, h - 4); ctx.setLineDash([]);
+    ctx.font = "700 12px Calibri, Carlito, sans-serif"; ctx.fillStyle = "#2a1a12"; ctx.textAlign = "center";
+    ctx.save(); ctx.translate(((S.strip.s0 + S.strip.s1) / 2) * k, h / 2); ctx.rotate(-Math.PI / 2); ctx.fillText("WHITE STRIP", 0, 4); ctx.restore();
+    S.dishes.forEach((d, i) => {
+      const x = d.cy * k, y = d.cx * k, r = (d.r - 6) * k, sel = i === S.selected, res = S.results[i];
+      ctx.beginPath(); ctx.arc(x, y, r, 0, 2 * Math.PI);
+      ctx.lineWidth = sel ? 3.5 : 1.8; ctx.strokeStyle = sel ? gold : "rgba(255,255,255,.85)"; ctx.stroke();
+      ctx.beginPath(); ctx.arc(x, y, 13, 0, 2 * Math.PI); ctx.fillStyle = sel ? gold : "rgba(42,26,18,.85)"; ctx.fill();
+      ctx.fillStyle = sel ? "#2a1a12" : "#fff"; ctx.font = "700 14px Calibri, Carlito, sans-serif"; ctx.textBaseline = "middle"; ctx.fillText(String(i + 1), x, y + 1);
+      if (res) {
+        const it = CoffeeCore.interpret(res, models);
+        const txt = it.detected ? `${fmt(Math.max(0, res.adulterant))} % ${it.adulterantName}` : (it.mixedBase ? "no chicory" : `pure ${it.baseName}`);
+        ctx.font = "700 12px Calibri, Carlito, sans-serif"; const tw = ctx.measureText(txt).width + 12;
+        const ty = Math.min(h - 12, y + r * 0.62);
+        ctx.fillStyle = "rgba(255,255,255,.93)"; ctx.fillRect(x - tw / 2, ty - 10, tw, 20);
+        ctx.fillStyle = "#2a1a12"; ctx.fillText(txt, x, ty + 1);
+      }
+      ctx.textBaseline = "alphabetic";
+    });
+  }
+  scanCanvas.addEventListener("click", (e) => {
+    if (!S) return;
+    const rect = scanCanvas.getBoundingClientRect(), { k } = scanGeom();
+    const line = (e.clientX - rect.left) / k, samp = (e.clientY - rect.top) / k;
+    let best = -1, bd = Infinity;
+    S.dishes.forEach((d, i) => { const dd = Math.hypot(d.cy - line, d.cx - samp); if (dd < d.r + 10 && dd < bd) { bd = dd; best = i; } });
+    if (best >= 0) selectDish(best);
+  });
+  window.addEventListener("resize", () => drawScan());
+
+  // ---------------------------------------------------------------- analysing a dish
+  let busy = false;
+  async function selectDish(i) {
+    if (busy || !S) return;
+    S.selected = i; drawScan(); showError("");
+    if (!S.results[i]) {
+      busy = true; setProgress(0, `Analysing dish ${i + 1}…`);
+      try {
+        S.results[i] = await CoffeeCore.analyseDish(S.scan, S.br, S.white, S.dishes[i], models, (p) => setProgress(p, `Analysing dish ${i + 1}… ${Math.round(p * 100)} %`));
+      } catch (err) { showError(`Dish ${i + 1}: ${err.message || err}`); busy = false; setProgress(null, "Click a dish to analyse it."); return; }
+      busy = false; setProgress(null, "Click another dish to compare.");
+      drawScan();
+    }
+    const card = $("resultCard"), first = card.hidden;
+    card.hidden = false; renderResult(i);
+    if (first) card.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function renderResult(i) {
+    const res = S.results[i], it = CoffeeCore.interpret(res, models);
+    $("resDish").textContent = `Dish ${i + 1} of ${S.dishes.length}`;
+    $("resType").textContent = it.typeLabel;
+    $("resConf").textContent = `${Math.round(it.confidence * 100)} % confident in the mixture type`;
+    const pm = it.plusMinus, comp = it.composition;
+    const rows = it.mixedBase
+      ? [["coffee", "Arabica + robusta", "linear-gradient(90deg, var(--s-arabica), var(--s-robusta))"], ["chicory", "Chicory", "var(--s-chicory)"]]
+      : [["robusta", "Robusta", "var(--s-robusta)"], ["arabica", "Arabica", "var(--s-arabica)"], ["chicory", "Chicory", "var(--s-chicory)"]];
+    $("comp").innerHTML = rows.map(([key, name, color]) => {
+      const inType = key === "coffee" || key === it.baseName || key === it.adulterantName, v = comp[key];
+      let main, sub;
+      if (!inType) { main = "–"; sub = "not in this mixture"; }
+      else if (key === it.adulterantName) {
+        if (!it.detected) { main = `< ${fmt(it.lod)} %`; sub = "not detected"; } else { main = `${fmt(v)} %`; sub = `± ${fmt(pm)} %`; }
+      } else { main = it.detected ? `${fmt(v)} %` : "≈ 100 %"; sub = (it.detected ? `± ${fmt(pm)} %` : "no chicory found") + (it.mixedBase ? " · split not measured" : ""); }
+      const width = inType ? (it.detected || key !== it.adulterantName ? v : 0) : 0;
+      const band = inType && it.detected ? `<em style="left:${Math.max(0, v - pm)}%;width:${Math.min(100, v + pm) - Math.max(0, v - pm)}%"></em>` : "";
+      return `<div class="comp-row"><span class="name"><i class="sw" style="background:${color}"></i>${name}</span>
+              <span class="bar" aria-hidden="true"><i style="width:${width}%;background:${color}"></i>${band}</span>
+              <span class="val">${main}<small>${sub}</small></span></div>`;
+    }).join("");
+    const notes = it.warnings.length ? it.warnings : [{ level: "ok", text: "This dish looks like the samples the models were trained on." }];
+    const label = { ok: "OK", warn: "Check", bad: "Caution" };
+    $("notes").innerHTML = notes.map((n) => `<div class="note ${n.level}"><b class="badge">${label[n.level]}</b><span>${esc(n.text)}</span></div>`).join("");
+    $("mapTitle").textContent = `${it.adulterantName[0].toUpperCase()}${it.adulterantName.slice(1)} across the dish`;
+    drawMap(res);
+    $("spreadText").textContent = Number.isFinite(res.spread)
+      ? `Spread between blocks of the dish: ± ${fmt(res.spread)} % (well-mixed training blends vary by about 1–2.5 %). Each block averages about 9 patches.`
+      : "Too few blocks to measure the spread across the dish.";
+    spectrumChart($("specSvg"), $("seriesKey"), $("specTip"),
+                  [{ name: "This dish", vals: res.meanReflectance, color: css("--ink"), width: 2.4 }, ...pureSeries().map((s) => ({ ...s, width: 1.6 }))],
+                  [[1730, "C–H lipid"], [2310, "C–H lipid"]]);
+    const D = models.families[res.family];
+    $("facts").innerHTML = [
+      ["Model", `${D.model.kind}, ${D.model.latent_variables} latent variables`],
+      ["Error on unseen sessions", `${fmt(D.error.loso_pooled_rmsep, 2)} % chicory (RMS, pooled over the held-out sessions)`],
+      ["Range shown (±)", `2 × that error, about a 95 % range`],
+      ["Mixture-type probabilities", Object.entries(res.probs).map(([c, p]) => `${models.families[c].name} ${Math.round(p * 100)} %`).join(" · ")],
+      ["Patches", `${res.nPatches} clean 12 × 12 px patches; ${res.nKept} used after dropping the least typical 10 %`],
+      ["Mask", `${res.maskPixels.toLocaleString()} powder pixels kept`],
+      ["Similarity to training dishes", `${fmt(Math.max(res.domainQ, res.domainT2), 2)} (typical dishes stay below 2; above 5 means unlike any training dish)`],
+      ["Dish position", `line ${res.dish.cy}, pixel ${res.dish.cx}, rim radius ${res.dish.r} px`],
+    ].map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join("");
+  }
+
+  // ---------------------------------------------------------------- map
+  const mapCanvas = $("mapCanvas");
+  let mapCells = [];
+  function drawMap(res) {
+    const d = res.dish, pad = d.r + 4, size = 360, dpr = window.devicePixelRatio || 1;
+    mapCanvas.width = size * dpr; mapCanvas.height = size * dpr;
+    const ctx = mapCanvas.getContext("2d"); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const k = size / (2 * pad), l0 = d.cy - pad, s0 = d.cx - pad;
+    ctx.fillStyle = "#000"; ctx.fillRect(0, 0, size, size);
+    ctx.globalAlpha = 0.9; ctx.drawImage(S.image, l0, s0, 2 * pad, 2 * pad, 0, 0, size, size); ctx.globalAlpha = 1;
+    mapCells = [];
+    for (const u of res.units) {
+      ctx.fillStyle = rampColor(u.pred);
+      for (const [row, col] of u.patches) {
+        const x = (row - 6 - l0) * k, y = (col - 6 - s0) * k, w = 12 * k;
+        ctx.globalAlpha = 0.86; ctx.fillRect(x + 0.4, y + 0.4, w - 0.8, w - 0.8);
+        mapCells.push([x, y, w, u]);
+      }
+    }
+    ctx.globalAlpha = 1;
+  }
+  mapCanvas.addEventListener("mousemove", (e) => {
+    const r = mapCanvas.getBoundingClientRect(), sx = 360 / r.width, x = (e.clientX - r.left) * sx, y = (e.clientY - r.top) * sx;
+    const hit = mapCells.find(([cx, cy, w]) => x >= cx && x < cx + w && y >= cy && y < cy + w), tip = $("mapTip");
+    if (!hit) { tip.hidden = true; return; }
+    tip.hidden = false; tip.textContent = `${fmt(hit[3].pred)} % here (block of ${hit[3].n} patches)`;
+    tip.style.left = `${Math.min(r.width - 170, e.clientX - r.left + 12)}px`; tip.style.top = `${e.clientY - r.top + 12}px`;
+  });
+  mapCanvas.addEventListener("mouseleave", () => { $("mapTip").hidden = true; });
+  (function drawRamp() { const c = $("rampCanvas"), ctx = c.getContext("2d"); for (let x = 0; x < c.width; x++) { ctx.fillStyle = rampColor((x / (c.width - 1)) * 50); ctx.fillRect(x, 0, 1, c.height); } })();
+
+  const rerender = () => { if (!$("viewLearn").hidden) drawLearnChart(); if (S && S.selected !== null && !$("resultCard").hidden) renderResult(S.selected); };
+  window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", rerender);
+  new MutationObserver(rerender).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+  route();
+})();
+</script>
